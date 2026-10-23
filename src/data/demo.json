@@ -1,0 +1,1354 @@
+{
+  "courses": [
+    {
+      "id": "10000000-0000-4000-8000-000000000001",
+      "language_code": "en",
+      "title": "Tiếng Anh",
+      "native_name": "English",
+      "level_label": "A1 · Cơ bản",
+      "description": "Bắt đầu với những câu tiếng Anh thiết thực.",
+      "sort_order": 1
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000002",
+      "language_code": "fr",
+      "title": "Tiếng Pháp",
+      "native_name": "Français",
+      "level_label": "A1 · Cơ bản",
+      "description": "Làm quen với tiếng Pháp từng ngày.",
+      "sort_order": 2
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000003",
+      "language_code": "zh",
+      "title": "Tiếng Trung",
+      "native_name": "中文",
+      "level_label": "HSK 1",
+      "description": "Phát âm Pinyin và hội thoại cơ bản.",
+      "sort_order": 3
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000004",
+      "language_code": "ja",
+      "title": "Tiếng Nhật",
+      "native_name": "日本語",
+      "level_label": "JLPT N5",
+      "description": "Từ mẫu câu cơ bản đến tiếng Nhật thường ngày.",
+      "sort_order": 4
+    }
+  ],
+  "lessons": [
+    {
+      "id": "20000000-0000-4000-8000-000000000001",
+      "course_id": "10000000-0000-4000-8000-000000000001",
+      "title": "Chào hỏi đầu tiên",
+      "description": "Cách chào hỏi, hỏi thăm và giới thiệu bản thân.",
+      "level": "A1",
+      "category": "Giao tiếp",
+      "duration_minutes": 10,
+      "sort_order": 1,
+      "explanation": "Dùng “I am ...” để giới thiệu và “How are you?” để hỏi thăm. “Nice to meet you” được dùng khi gặp người mới.",
+      "example_sentence": "My name is Anna. Nice to meet you.",
+      "example_translation": "Tôi tên là Anna. Rất vui được gặp bạn.",
+      "listening_text": "Hello! My name is Anna. How are you today?",
+      "audio_key": null,
+      "is_published": true,
+      "image_key": null
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000002",
+      "course_id": "10000000-0000-4000-8000-000000000001",
+      "title": "Gia đình và bạn bè",
+      "description": "Gọi tên các thành viên gia đình.",
+      "level": "A1",
+      "category": "Từ vựng",
+      "duration_minutes": 12,
+      "sort_order": 2,
+      "explanation": "Sở hữu: “my” (của tôi), “your” (của bạn). Dùng “This is my ...” để giới thiệu người thân.",
+      "example_sentence": "This is my sister. She is a student.",
+      "example_translation": "Đây là chị/em gái của tôi. Cô ấy là học sinh.",
+      "listening_text": "This is my family. I have one brother and one sister.",
+      "audio_key": null,
+      "is_published": true,
+      "image_key": null
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000003",
+      "course_id": "10000000-0000-4000-8000-000000000001",
+      "title": "Thói quen mỗi ngày",
+      "description": "Nói về các hoạt động quen thuộc trong ngày.",
+      "level": "A1",
+      "category": "Ngữ pháp",
+      "duration_minutes": 14,
+      "sort_order": 3,
+      "explanation": "Thì hiện tại đơn: I/you/we/they + động từ nguyên mẫu, he/she/it thường thêm -s/-es. Dùng “every day” cho hoạt động lặp lại.",
+      "example_sentence": "I study English every evening.",
+      "example_translation": "Tôi học tiếng Anh mỗi tối.",
+      "listening_text": "I wake up at seven, eat breakfast, and study English in the evening.",
+      "audio_key": null,
+      "is_published": true,
+      "image_key": null
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000004",
+      "course_id": "10000000-0000-4000-8000-000000000002",
+      "title": "Bonjour! Xin chào",
+      "description": "Lời chào và giới thiệu tiếng Pháp.",
+      "level": "A1",
+      "category": "Giao tiếp",
+      "duration_minutes": 10,
+      "sort_order": 1,
+      "explanation": "“Bonjour” dùng ban ngày, “Bonsoir” dùng buổi tối. “Je m’appelle ...” để giới thiệu tên, “Merci” là cảm ơn.",
+      "example_sentence": "Bonjour ! Je m’appelle Marie.",
+      "example_translation": "Xin chào! Tôi tên Marie.",
+      "listening_text": "Bonjour ! Je m’appelle Marie. Enchantée de faire votre connaissance.",
+      "audio_key": null,
+      "is_published": true,
+      "image_key": null
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000005",
+      "course_id": "10000000-0000-4000-8000-000000000002",
+      "title": "Con số từ 1 đến 10",
+      "description": "Tập đọc số và sử dụng trong câu đơn giản.",
+      "level": "A1",
+      "category": "Từ vựng",
+      "duration_minutes": 12,
+      "sort_order": 2,
+      "explanation": "Các số 1–10: un, deux, trois, quatre, cinq, six, sept, huit, neuf, dix. Khi nói tuổi: “J’ai ... ans.”",
+      "example_sentence": "J’ai dix ans.",
+      "example_translation": "Tôi mười tuổi.",
+      "listening_text": "Un, deux, trois, quatre, cinq. Nous comptons ensemble.",
+      "audio_key": null,
+      "is_published": true,
+      "image_key": null
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000006",
+      "course_id": "10000000-0000-4000-8000-000000000002",
+      "title": "Một ngày thường",
+      "description": "Câu đơn giản với être, avoir và động từ thường.",
+      "level": "A1",
+      "category": "Ngữ pháp",
+      "duration_minutes": 14,
+      "sort_order": 3,
+      "explanation": "Je suis = tôi là; j’ai = tôi có. Ví dụ “Je suis étudiant(e)” và “J’ai un livre”.",
+      "example_sentence": "Je suis étudiant et j’ai un livre.",
+      "example_translation": "Tôi là sinh viên và tôi có một cuốn sách.",
+      "listening_text": "Je suis étudiant. Le matin, je lis un livre et je prends un café.",
+      "audio_key": null,
+      "is_published": true,
+      "image_key": null
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000007",
+      "course_id": "10000000-0000-4000-8000-000000000003",
+      "title": "你好！Chào hỏi",
+      "description": "Các câu giao tiếp tiếng Trung đầu tiên.",
+      "level": "HSK 1",
+      "category": "Giao tiếp",
+      "duration_minutes": 10,
+      "sort_order": 1,
+      "explanation": "Pinyin giúp ghi âm đọc; tiếng Trung phổ thông có 4 thanh chính. “你好” (nǐ hǎo) là xin chào. “我叫...” (wǒ jiào) là tôi tên.",
+      "example_sentence": "你好，我叫小明。",
+      "example_translation": "Xin chào, tôi tên Tiểu Minh.",
+      "listening_text": "你好！我叫小明。你叫什么名字？很高兴认识你。",
+      "audio_key": null,
+      "is_published": true,
+      "image_key": null
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000008",
+      "course_id": "10000000-0000-4000-8000-000000000003",
+      "title": "Số đếm và ngày tháng",
+      "description": "Các số từ 1 đến 10.",
+      "level": "HSK 1",
+      "category": "Từ vựng",
+      "duration_minutes": 12,
+      "sort_order": 2,
+      "explanation": "一 yī; 二 èr; 三 sān; 四 sì; 五 wǔ; 六 liù; 七 qī; 八 bā; 九 jiǔ; 十 shí. Lưu ý thanh điệu.",
+      "example_sentence": "我有三个朋友。",
+      "example_translation": "Tôi có ba người bạn.",
+      "listening_text": "一、二、三、四、五。我们一起来数数吧。",
+      "audio_key": null,
+      "is_published": true,
+      "image_key": null
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000009",
+      "course_id": "10000000-0000-4000-8000-000000000003",
+      "title": "Giới thiệu bản thân",
+      "description": "Tập ghép câu theo mẫu chủ ngữ + động từ + bổ ngữ.",
+      "level": "HSK 1",
+      "category": "Ngữ pháp",
+      "duration_minutes": 14,
+      "sort_order": 3,
+      "explanation": "Mẫu “我是...” = Tôi là...; “你是...吗？” = Bạn có phải ... không? “吗” tạo câu nghi vấn có/không.",
+      "example_sentence": "我是越南人。你是学生吗？",
+      "example_translation": "Tôi là người Việt Nam. Bạn là học sinh phải không?",
+      "listening_text": "你好！我是越南人，我是学生。我喜欢学习中文。",
+      "audio_key": null,
+      "is_published": true,
+      "image_key": null
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000010",
+      "course_id": "10000000-0000-4000-8000-000000000004",
+      "title": "はじめまして！",
+      "description": "Chào hỏi và giới thiệu trong tiếng Nhật.",
+      "level": "N5",
+      "category": "Giao tiếp",
+      "duration_minutes": 10,
+      "sort_order": 1,
+      "explanation": "“はじめまして” dùng khi lần đầu gặp mặt. “わたしは ... です” = Tôi là... “よろしくおねがいします” dùng sau giới thiệu.",
+      "example_sentence": "はじめまして。わたしはアンです。",
+      "example_translation": "Rất vui được gặp. Tôi là An.",
+      "listening_text": "こんにちは。はじめまして。わたしはアンです。よろしくおねがいします。",
+      "audio_key": null,
+      "is_published": true,
+      "image_key": null
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000011",
+      "course_id": "10000000-0000-4000-8000-000000000004",
+      "title": "Hiragana cơ bản",
+      "description": "Làm quen với bảng chữ cái Hiragana.",
+      "level": "N5",
+      "category": "Chữ viết",
+      "duration_minutes": 12,
+      "sort_order": 2,
+      "explanation": "5 nguyên âm Hiragana: あ(a), い(i), う(u), え(e), お(o). Ghép thành từ và luyện phát âm.",
+      "example_sentence": "あお (ao) = màu xanh dương.",
+      "example_translation": "あお nghĩa là màu xanh dương.",
+      "listening_text": "あ、い、う、え、お。あお。いえ。うえ。",
+      "audio_key": null,
+      "is_published": true,
+      "image_key": null
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000012",
+      "course_id": "10000000-0000-4000-8000-000000000004",
+      "title": "Trợ từ は và です",
+      "description": "Tạo câu giới thiệu đơn giản.",
+      "level": "N5",
+      "category": "Ngữ pháp",
+      "duration_minutes": 14,
+      "sort_order": 3,
+      "explanation": "Mẫu A は B です = A là B. は ở đây viết “ha” nhưng đọc “wa” khi làm trợ từ chủ đề. です thường kết thúc câu lịch sự.",
+      "example_sentence": "わたしは学生です。",
+      "example_translation": "Tôi là học sinh.",
+      "listening_text": "わたしは学生です。これは本です。日本語を勉強します。",
+      "audio_key": null,
+      "is_published": true,
+      "image_key": null
+    }
+  ],
+  "vocabulary": [
+    {
+      "id": "30000000-0000-4000-8000-000000000001",
+      "lesson_id": "20000000-0000-4000-8000-000000000001",
+      "term": "Hello",
+      "pronunciation": "/həˈloʊ/",
+      "meaning": "Xin chào",
+      "example": "Hello, my friend!",
+      "example_translation": "Chào bạn!",
+      "sort_order": 1
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000002",
+      "lesson_id": "20000000-0000-4000-8000-000000000001",
+      "term": "Thank you",
+      "pronunciation": "/ˈθæŋk juː/",
+      "meaning": "Cảm ơn",
+      "example": "Thank you for helping me.",
+      "example_translation": "Cảm ơn vì đã giúp tôi.",
+      "sort_order": 2
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000003",
+      "lesson_id": "20000000-0000-4000-8000-000000000001",
+      "term": "Goodbye",
+      "pronunciation": "/ˌɡʊdˈbaɪ/",
+      "meaning": "Tạm biệt",
+      "example": "Goodbye! See you tomorrow.",
+      "example_translation": "Tạm biệt! Hẹn gặp lại ngày mai.",
+      "sort_order": 3
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000004",
+      "lesson_id": "20000000-0000-4000-8000-000000000001",
+      "term": "My name is",
+      "pronunciation": "/maɪ neɪm ɪz/",
+      "meaning": "Tên tôi là",
+      "example": "My name is Alex.",
+      "example_translation": "Tên tôi là Alex.",
+      "sort_order": 4
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000005",
+      "lesson_id": "20000000-0000-4000-8000-000000000001",
+      "term": "How are you?",
+      "pronunciation": "/haʊ ɑːr juː/",
+      "meaning": "Bạn khỏe không?",
+      "example": "How are you today?",
+      "example_translation": "Hôm nay bạn khỏe không?",
+      "sort_order": 5
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000006",
+      "lesson_id": "20000000-0000-4000-8000-000000000002",
+      "term": "Family",
+      "pronunciation": "/ˈfæməli/",
+      "meaning": "Gia đình",
+      "example": "I love my family.",
+      "example_translation": "Tôi yêu gia đình mình.",
+      "sort_order": 1
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000007",
+      "lesson_id": "20000000-0000-4000-8000-000000000002",
+      "term": "Mother",
+      "pronunciation": "/ˈmʌðər/",
+      "meaning": "Mẹ",
+      "example": "My mother is kind.",
+      "example_translation": "Mẹ tôi tốt bụng.",
+      "sort_order": 2
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000008",
+      "lesson_id": "20000000-0000-4000-8000-000000000002",
+      "term": "Father",
+      "pronunciation": "/ˈfɑːðər/",
+      "meaning": "Bố",
+      "example": "My father is a teacher.",
+      "example_translation": "Bố tôi là giáo viên.",
+      "sort_order": 3
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000009",
+      "lesson_id": "20000000-0000-4000-8000-000000000002",
+      "term": "Brother",
+      "pronunciation": "/ˈbrʌðər/",
+      "meaning": "Anh/em trai",
+      "example": "He is my brother.",
+      "example_translation": "Anh ấy là anh/em trai tôi.",
+      "sort_order": 4
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000010",
+      "lesson_id": "20000000-0000-4000-8000-000000000002",
+      "term": "Sister",
+      "pronunciation": "/ˈsɪstər/",
+      "meaning": "Chị/em gái",
+      "example": "She is my sister.",
+      "example_translation": "Cô ấy là chị/em gái tôi.",
+      "sort_order": 5
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000011",
+      "lesson_id": "20000000-0000-4000-8000-000000000003",
+      "term": "Wake up",
+      "pronunciation": "/weɪk ʌp/",
+      "meaning": "Thức dậy",
+      "example": "I wake up early.",
+      "example_translation": "Tôi thức dậy sớm.",
+      "sort_order": 1
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000012",
+      "lesson_id": "20000000-0000-4000-8000-000000000003",
+      "term": "Breakfast",
+      "pronunciation": "/ˈbrekfəst/",
+      "meaning": "Bữa sáng",
+      "example": "I have breakfast at eight.",
+      "example_translation": "Tôi ăn sáng lúc tám giờ.",
+      "sort_order": 2
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000013",
+      "lesson_id": "20000000-0000-4000-8000-000000000003",
+      "term": "Study",
+      "pronunciation": "/ˈstʌdi/",
+      "meaning": "Học",
+      "example": "We study every day.",
+      "example_translation": "Chúng tôi học mỗi ngày.",
+      "sort_order": 3
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000014",
+      "lesson_id": "20000000-0000-4000-8000-000000000003",
+      "term": "Evening",
+      "pronunciation": "/ˈiːvnɪŋ/",
+      "meaning": "Buổi tối",
+      "example": "See you this evening.",
+      "example_translation": "Hẹn gặp tối nay.",
+      "sort_order": 4
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000015",
+      "lesson_id": "20000000-0000-4000-8000-000000000003",
+      "term": "Every day",
+      "pronunciation": "/ˈevri deɪ/",
+      "meaning": "Mỗi ngày",
+      "example": "I walk every day.",
+      "example_translation": "Tôi đi bộ mỗi ngày.",
+      "sort_order": 5
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000016",
+      "lesson_id": "20000000-0000-4000-8000-000000000004",
+      "term": "Bonjour",
+      "pronunciation": "/bɔ̃.ʒuʁ/",
+      "meaning": "Xin chào",
+      "example": "Bonjour, Paul !",
+      "example_translation": "Chào Paul!",
+      "sort_order": 1
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000017",
+      "lesson_id": "20000000-0000-4000-8000-000000000004",
+      "term": "Merci",
+      "pronunciation": "/mɛʁ.si/",
+      "meaning": "Cảm ơn",
+      "example": "Merci beaucoup.",
+      "example_translation": "Cảm ơn rất nhiều.",
+      "sort_order": 2
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000018",
+      "lesson_id": "20000000-0000-4000-8000-000000000004",
+      "term": "Au revoir",
+      "pronunciation": "/o ʁə.vwaʁ/",
+      "meaning": "Tạm biệt",
+      "example": "Au revoir, à demain !",
+      "example_translation": "Tạm biệt, hẹn ngày mai!",
+      "sort_order": 3
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000019",
+      "lesson_id": "20000000-0000-4000-8000-000000000004",
+      "term": "Je m’appelle",
+      "pronunciation": "/ʒə ma.pɛl/",
+      "meaning": "Tôi tên là",
+      "example": "Je m’appelle Luc.",
+      "example_translation": "Tôi tên Luc.",
+      "sort_order": 4
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000020",
+      "lesson_id": "20000000-0000-4000-8000-000000000004",
+      "term": "Comment ça va ?",
+      "pronunciation": "/kɔ.mɑ̃ sa va/",
+      "meaning": "Bạn khỏe không?",
+      "example": "Salut, comment ça va ?",
+      "example_translation": "Chào, bạn khỏe không?",
+      "sort_order": 5
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000021",
+      "lesson_id": "20000000-0000-4000-8000-000000000005",
+      "term": "Un",
+      "pronunciation": "/œ̃/",
+      "meaning": "Một",
+      "example": "Un livre.",
+      "example_translation": "Một cuốn sách.",
+      "sort_order": 1
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000022",
+      "lesson_id": "20000000-0000-4000-8000-000000000005",
+      "term": "Deux",
+      "pronunciation": "/dø/",
+      "meaning": "Hai",
+      "example": "Deux amis.",
+      "example_translation": "Hai người bạn.",
+      "sort_order": 2
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000023",
+      "lesson_id": "20000000-0000-4000-8000-000000000005",
+      "term": "Trois",
+      "pronunciation": "/tʁwa/",
+      "meaning": "Ba",
+      "example": "Trois pommes.",
+      "example_translation": "Ba quả táo.",
+      "sort_order": 3
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000024",
+      "lesson_id": "20000000-0000-4000-8000-000000000005",
+      "term": "Cinq",
+      "pronunciation": "/sɛ̃k/",
+      "meaning": "Năm",
+      "example": "Cinq minutes.",
+      "example_translation": "Năm phút.",
+      "sort_order": 4
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000025",
+      "lesson_id": "20000000-0000-4000-8000-000000000005",
+      "term": "Dix",
+      "pronunciation": "/dis/",
+      "meaning": "Mười",
+      "example": "Dix personnes.",
+      "example_translation": "Mười người.",
+      "sort_order": 5
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000026",
+      "lesson_id": "20000000-0000-4000-8000-000000000006",
+      "term": "Je suis",
+      "pronunciation": "/ʒə sɥi/",
+      "meaning": "Tôi là",
+      "example": "Je suis vietnamien.",
+      "example_translation": "Tôi là người Việt Nam.",
+      "sort_order": 1
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000027",
+      "lesson_id": "20000000-0000-4000-8000-000000000006",
+      "term": "J’ai",
+      "pronunciation": "/ʒe/",
+      "meaning": "Tôi có",
+      "example": "J’ai un stylo.",
+      "example_translation": "Tôi có một cây bút.",
+      "sort_order": 2
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000028",
+      "lesson_id": "20000000-0000-4000-8000-000000000006",
+      "term": "Livre",
+      "pronunciation": "/livʁ/",
+      "meaning": "Sách",
+      "example": "C’est un livre.",
+      "example_translation": "Đó là một cuốn sách.",
+      "sort_order": 3
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000029",
+      "lesson_id": "20000000-0000-4000-8000-000000000006",
+      "term": "Matin",
+      "pronunciation": "/ma.tɛ̃/",
+      "meaning": "Buổi sáng",
+      "example": "Bonjour ce matin.",
+      "example_translation": "Chào buổi sáng này.",
+      "sort_order": 4
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000030",
+      "lesson_id": "20000000-0000-4000-8000-000000000006",
+      "term": "Lire",
+      "pronunciation": "/liʁ/",
+      "meaning": "Đọc",
+      "example": "J’aime lire.",
+      "example_translation": "Tôi thích đọc.",
+      "sort_order": 5
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000031",
+      "lesson_id": "20000000-0000-4000-8000-000000000007",
+      "term": "你好",
+      "pronunciation": "nǐ hǎo",
+      "meaning": "Xin chào",
+      "example": "你好！",
+      "example_translation": "Xin chào!",
+      "sort_order": 1
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000032",
+      "lesson_id": "20000000-0000-4000-8000-000000000007",
+      "term": "谢谢",
+      "pronunciation": "xièxie",
+      "meaning": "Cảm ơn",
+      "example": "谢谢你。",
+      "example_translation": "Cảm ơn bạn.",
+      "sort_order": 2
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000033",
+      "lesson_id": "20000000-0000-4000-8000-000000000007",
+      "term": "再见",
+      "pronunciation": "zàijiàn",
+      "meaning": "Tạm biệt",
+      "example": "明天见，再见！",
+      "example_translation": "Hẹn mai, tạm biệt!",
+      "sort_order": 3
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000034",
+      "lesson_id": "20000000-0000-4000-8000-000000000007",
+      "term": "我",
+      "pronunciation": "wǒ",
+      "meaning": "Tôi",
+      "example": "我是学生。",
+      "example_translation": "Tôi là học sinh.",
+      "sort_order": 4
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000035",
+      "lesson_id": "20000000-0000-4000-8000-000000000007",
+      "term": "名字",
+      "pronunciation": "míngzi",
+      "meaning": "Tên",
+      "example": "你叫什么名字？",
+      "example_translation": "Bạn tên là gì?",
+      "sort_order": 5
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000036",
+      "lesson_id": "20000000-0000-4000-8000-000000000008",
+      "term": "一",
+      "pronunciation": "yī",
+      "meaning": "Một",
+      "example": "一个人。",
+      "example_translation": "Một người.",
+      "sort_order": 1
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000037",
+      "lesson_id": "20000000-0000-4000-8000-000000000008",
+      "term": "二",
+      "pronunciation": "èr",
+      "meaning": "Hai",
+      "example": "二月。",
+      "example_translation": "Tháng Hai.",
+      "sort_order": 2
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000038",
+      "lesson_id": "20000000-0000-4000-8000-000000000008",
+      "term": "三",
+      "pronunciation": "sān",
+      "meaning": "Ba",
+      "example": "三个苹果。",
+      "example_translation": "Ba quả táo.",
+      "sort_order": 3
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000039",
+      "lesson_id": "20000000-0000-4000-8000-000000000008",
+      "term": "五",
+      "pronunciation": "wǔ",
+      "meaning": "Năm",
+      "example": "五本书。",
+      "example_translation": "Năm cuốn sách.",
+      "sort_order": 4
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000040",
+      "lesson_id": "20000000-0000-4000-8000-000000000008",
+      "term": "十",
+      "pronunciation": "shí",
+      "meaning": "Mười",
+      "example": "十分钟。",
+      "example_translation": "Mười phút.",
+      "sort_order": 5
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000041",
+      "lesson_id": "20000000-0000-4000-8000-000000000009",
+      "term": "是",
+      "pronunciation": "shì",
+      "meaning": "Là",
+      "example": "我是老师。",
+      "example_translation": "Tôi là giáo viên.",
+      "sort_order": 1
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000042",
+      "lesson_id": "20000000-0000-4000-8000-000000000009",
+      "term": "学生",
+      "pronunciation": "xuésheng",
+      "meaning": "Học sinh",
+      "example": "她是学生。",
+      "example_translation": "Cô ấy là học sinh.",
+      "sort_order": 2
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000043",
+      "lesson_id": "20000000-0000-4000-8000-000000000009",
+      "term": "老师",
+      "pronunciation": "lǎoshī",
+      "meaning": "Giáo viên",
+      "example": "我的老师很好。",
+      "example_translation": "Thầy/cô tôi rất tốt.",
+      "sort_order": 3
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000044",
+      "lesson_id": "20000000-0000-4000-8000-000000000009",
+      "term": "吗",
+      "pronunciation": "ma",
+      "meaning": "Trợ từ nghi vấn",
+      "example": "你是学生吗？",
+      "example_translation": "Bạn là học sinh à?",
+      "sort_order": 4
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000045",
+      "lesson_id": "20000000-0000-4000-8000-000000000009",
+      "term": "学习",
+      "pronunciation": "xuéxí",
+      "meaning": "Học tập",
+      "example": "我学习中文。",
+      "example_translation": "Tôi học tiếng Trung.",
+      "sort_order": 5
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000046",
+      "lesson_id": "20000000-0000-4000-8000-000000000010",
+      "term": "こんにちは",
+      "pronunciation": "konnichiwa",
+      "meaning": "Xin chào",
+      "example": "こんにちは、田中さん。",
+      "example_translation": "Chào anh/chị Tanaka.",
+      "sort_order": 1
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000047",
+      "lesson_id": "20000000-0000-4000-8000-000000000010",
+      "term": "ありがとう",
+      "pronunciation": "arigatō",
+      "meaning": "Cảm ơn",
+      "example": "ありがとうございます。",
+      "example_translation": "Xin cảm ơn.",
+      "sort_order": 2
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000048",
+      "lesson_id": "20000000-0000-4000-8000-000000000010",
+      "term": "さようなら",
+      "pronunciation": "sayōnara",
+      "meaning": "Tạm biệt",
+      "example": "さようなら、またね。",
+      "example_translation": "Tạm biệt, hẹn gặp lại.",
+      "sort_order": 3
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000049",
+      "lesson_id": "20000000-0000-4000-8000-000000000010",
+      "term": "わたし",
+      "pronunciation": "watashi",
+      "meaning": "Tôi",
+      "example": "わたしは学生です。",
+      "example_translation": "Tôi là học sinh.",
+      "sort_order": 4
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000050",
+      "lesson_id": "20000000-0000-4000-8000-000000000010",
+      "term": "はじめまして",
+      "pronunciation": "hajimemashite",
+      "meaning": "Rất vui khi gặp lần đầu",
+      "example": "はじめまして。",
+      "example_translation": "Rất vui được gặp.",
+      "sort_order": 5
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000051",
+      "lesson_id": "20000000-0000-4000-8000-000000000011",
+      "term": "あ",
+      "pronunciation": "a",
+      "meaning": "Âm a",
+      "example": "あさ (asa)",
+      "example_translation": "Buổi sáng.",
+      "sort_order": 1
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000052",
+      "lesson_id": "20000000-0000-4000-8000-000000000011",
+      "term": "い",
+      "pronunciation": "i",
+      "meaning": "Âm i",
+      "example": "いえ (ie)",
+      "example_translation": "Ngôi nhà.",
+      "sort_order": 2
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000053",
+      "lesson_id": "20000000-0000-4000-8000-000000000011",
+      "term": "う",
+      "pronunciation": "u",
+      "meaning": "Âm u",
+      "example": "うえ (ue)",
+      "example_translation": "Phía trên.",
+      "sort_order": 3
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000054",
+      "lesson_id": "20000000-0000-4000-8000-000000000011",
+      "term": "え",
+      "pronunciation": "e",
+      "meaning": "Âm e",
+      "example": "えき (eki)",
+      "example_translation": "Nhà ga.",
+      "sort_order": 4
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000055",
+      "lesson_id": "20000000-0000-4000-8000-000000000011",
+      "term": "お",
+      "pronunciation": "o",
+      "meaning": "Âm o",
+      "example": "おと (oto)",
+      "example_translation": "Âm thanh.",
+      "sort_order": 5
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000056",
+      "lesson_id": "20000000-0000-4000-8000-000000000012",
+      "term": "学生",
+      "pronunciation": "gakusei",
+      "meaning": "Học sinh/sinh viên",
+      "example": "わたしは学生です。",
+      "example_translation": "Tôi là học sinh.",
+      "sort_order": 1
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000057",
+      "lesson_id": "20000000-0000-4000-8000-000000000012",
+      "term": "先生",
+      "pronunciation": "sensei",
+      "meaning": "Giáo viên",
+      "example": "田中さんは先生です。",
+      "example_translation": "Anh/chị Tanaka là giáo viên.",
+      "sort_order": 2
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000058",
+      "lesson_id": "20000000-0000-4000-8000-000000000012",
+      "term": "本",
+      "pronunciation": "hon",
+      "meaning": "Sách",
+      "example": "これは本です。",
+      "example_translation": "Đây là sách.",
+      "sort_order": 3
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000059",
+      "lesson_id": "20000000-0000-4000-8000-000000000012",
+      "term": "日本語",
+      "pronunciation": "nihongo",
+      "meaning": "Tiếng Nhật",
+      "example": "日本語を勉強します。",
+      "example_translation": "Tôi học tiếng Nhật.",
+      "sort_order": 4
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000060",
+      "lesson_id": "20000000-0000-4000-8000-000000000012",
+      "term": "これ",
+      "pronunciation": "kore",
+      "meaning": "Cái này",
+      "example": "これは何ですか。",
+      "example_translation": "Đây là cái gì?",
+      "sort_order": 5
+    }
+  ],
+  "exercises": [
+    {
+      "id": "40000000-0000-4000-8000-000000000001",
+      "lesson_id": "20000000-0000-4000-8000-000000000001",
+      "prompt": "Cụm từ nào có nghĩa là “Cảm ơn”?",
+      "choices": [
+        "Goodbye",
+        "Thank you",
+        "Good morning",
+        "Hello"
+      ],
+      "answer_index": 1,
+      "explanation": "“Thank you” = Cảm ơn.",
+      "sort_order": 1
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000002",
+      "lesson_id": "20000000-0000-4000-8000-000000000001",
+      "prompt": "Chọn câu giới thiệu tên đúng.",
+      "choices": [
+        "I name Anna",
+        "Me name Anna",
+        "My name is Anna",
+        "Name I Anna"
+      ],
+      "answer_index": 2,
+      "explanation": "“My name is + tên”.",
+      "sort_order": 2
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000003",
+      "lesson_id": "20000000-0000-4000-8000-000000000001",
+      "prompt": "“How are you?” dùng để làm gì?",
+      "choices": [
+        "Hỏi thăm sức khỏe",
+        "Hỏi giá tiền",
+        "Hỏi giờ",
+        "Hỏi tuổi"
+      ],
+      "answer_index": 0,
+      "explanation": "Đây là câu hỏi thăm rất phổ biến.",
+      "sort_order": 3
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000004",
+      "lesson_id": "20000000-0000-4000-8000-000000000002",
+      "prompt": "“Sister” nghĩa là gì?",
+      "choices": [
+        "Mẹ",
+        "Chị/em gái",
+        "Anh/em trai",
+        "Bạn bè"
+      ],
+      "answer_index": 1,
+      "explanation": "Sister = chị hoặc em gái.",
+      "sort_order": 1
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000005",
+      "lesson_id": "20000000-0000-4000-8000-000000000002",
+      "prompt": "Điền vào câu: This is ___ father.",
+      "choices": [
+        "me",
+        "mine",
+        "my",
+        "I"
+      ],
+      "answer_index": 2,
+      "explanation": "Trước danh từ dùng tính từ sở hữu “my”.",
+      "sort_order": 2
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000006",
+      "lesson_id": "20000000-0000-4000-8000-000000000002",
+      "prompt": "“Brother” là ai?",
+      "choices": [
+        "Anh/em trai",
+        "Bố",
+        "Ông",
+        "Bạn nữ"
+      ],
+      "answer_index": 0,
+      "explanation": "Brother = anh/em trai.",
+      "sort_order": 3
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000007",
+      "lesson_id": "20000000-0000-4000-8000-000000000003",
+      "prompt": "Chọn câu hiện tại đơn đúng.",
+      "choices": [
+        "She study English",
+        "She studies English",
+        "She studying English",
+        "She to study English"
+      ],
+      "answer_index": 1,
+      "explanation": "Chủ ngữ “she” dùng “studies”.",
+      "sort_order": 1
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000008",
+      "lesson_id": "20000000-0000-4000-8000-000000000003",
+      "prompt": "“Wake up” nghĩa là gì?",
+      "choices": [
+        "Đi ngủ",
+        "Thức dậy",
+        "Đi làm",
+        "Ăn sáng"
+      ],
+      "answer_index": 1,
+      "explanation": "Wake up = thức dậy.",
+      "sort_order": 2
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000009",
+      "lesson_id": "20000000-0000-4000-8000-000000000003",
+      "prompt": "“Every day” chỉ điều gì?",
+      "choices": [
+        "Ngày mai",
+        "Hôm qua",
+        "Mỗi ngày",
+        "Tuần trước"
+      ],
+      "answer_index": 2,
+      "explanation": "Every day = mỗi ngày.",
+      "sort_order": 3
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000010",
+      "lesson_id": "20000000-0000-4000-8000-000000000004",
+      "prompt": "“Merci” nghĩa là gì?",
+      "choices": [
+        "Xin lỗi",
+        "Cảm ơn",
+        "Tạm biệt",
+        "Vâng"
+      ],
+      "answer_index": 1,
+      "explanation": "Merci = cảm ơn.",
+      "sort_order": 1
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000011",
+      "lesson_id": "20000000-0000-4000-8000-000000000004",
+      "prompt": "Câu giới thiệu tên là gì?",
+      "choices": [
+        "Je suis faim",
+        "Je m’appelle Marie",
+        "Au revoir Marie",
+        "Ça va Marie"
+      ],
+      "answer_index": 1,
+      "explanation": "Je m’appelle + tên.",
+      "sort_order": 2
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000012",
+      "lesson_id": "20000000-0000-4000-8000-000000000004",
+      "prompt": "Lời chào khi gặp ban ngày?",
+      "choices": [
+        "Au revoir",
+        "Merci",
+        "Bonjour",
+        "Bonne nuit"
+      ],
+      "answer_index": 2,
+      "explanation": "Bonjour là cách chào ban ngày.",
+      "sort_order": 3
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000013",
+      "lesson_id": "20000000-0000-4000-8000-000000000005",
+      "prompt": "Số 3 tiếng Pháp là?",
+      "choices": [
+        "trois",
+        "deux",
+        "cinq",
+        "dix"
+      ],
+      "answer_index": 0,
+      "explanation": "Trois = 3.",
+      "sort_order": 1
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000014",
+      "lesson_id": "20000000-0000-4000-8000-000000000005",
+      "prompt": "Số 10 tiếng Pháp là?",
+      "choices": [
+        "un",
+        "huit",
+        "dix",
+        "six"
+      ],
+      "answer_index": 2,
+      "explanation": "Dix = 10.",
+      "sort_order": 2
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000015",
+      "lesson_id": "20000000-0000-4000-8000-000000000005",
+      "prompt": "“Deux amis” nghĩa là gì?",
+      "choices": [
+        "Một bạn",
+        "Hai bạn",
+        "Ba bạn",
+        "Năm bạn"
+      ],
+      "answer_index": 1,
+      "explanation": "Deux = hai.",
+      "sort_order": 3
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000016",
+      "lesson_id": "20000000-0000-4000-8000-000000000006",
+      "prompt": "“J’ai” nghĩa là gì?",
+      "choices": [
+        "Tôi là",
+        "Tôi có",
+        "Tôi muốn",
+        "Tôi đi"
+      ],
+      "answer_index": 1,
+      "explanation": "J’ai = tôi có.",
+      "sort_order": 1
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000017",
+      "lesson_id": "20000000-0000-4000-8000-000000000006",
+      "prompt": "“Livre” nghĩa là gì?",
+      "choices": [
+        "Bút",
+        "Trường",
+        "Sách",
+        "Nhà"
+      ],
+      "answer_index": 2,
+      "explanation": "Livre = sách.",
+      "sort_order": 2
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000018",
+      "lesson_id": "20000000-0000-4000-8000-000000000006",
+      "prompt": "Điền: Je ___ étudiant.",
+      "choices": [
+        "suis",
+        "ai",
+        "es",
+        "êtes"
+      ],
+      "answer_index": 0,
+      "explanation": "Je suis étudiant.",
+      "sort_order": 3
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000019",
+      "lesson_id": "20000000-0000-4000-8000-000000000007",
+      "prompt": "“你好” nghĩa là gì?",
+      "choices": [
+        "Xin chào",
+        "Tạm biệt",
+        "Xin lỗi",
+        "Cảm ơn"
+      ],
+      "answer_index": 0,
+      "explanation": "Nǐ hǎo = Xin chào.",
+      "sort_order": 1
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000020",
+      "lesson_id": "20000000-0000-4000-8000-000000000007",
+      "prompt": "“谢谢” là gì?",
+      "choices": [
+        "Không",
+        "Cảm ơn",
+        "Xin chào",
+        "Tôi"
+      ],
+      "answer_index": 1,
+      "explanation": "Xièxie = Cảm ơn.",
+      "sort_order": 2
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000021",
+      "lesson_id": "20000000-0000-4000-8000-000000000007",
+      "prompt": "“我” nghĩa là gì?",
+      "choices": [
+        "Bạn",
+        "Anh ấy",
+        "Chúng tôi",
+        "Tôi"
+      ],
+      "answer_index": 3,
+      "explanation": "Wǒ = Tôi.",
+      "sort_order": 3
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000022",
+      "lesson_id": "20000000-0000-4000-8000-000000000008",
+      "prompt": "“三” là số mấy?",
+      "choices": [
+        "1",
+        "3",
+        "5",
+        "10"
+      ],
+      "answer_index": 1,
+      "explanation": "Sān = ba.",
+      "sort_order": 1
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000023",
+      "lesson_id": "20000000-0000-4000-8000-000000000008",
+      "prompt": "“十” có nghĩa là?",
+      "choices": [
+        "Mười",
+        "Hai",
+        "Bốn",
+        "Sáu"
+      ],
+      "answer_index": 0,
+      "explanation": "Shí = mười.",
+      "sort_order": 2
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000024",
+      "lesson_id": "20000000-0000-4000-8000-000000000008",
+      "prompt": "Pinyin cho “五” là?",
+      "choices": [
+        "wǒ",
+        "wú",
+        "wǔ",
+        "wù"
+      ],
+      "answer_index": 2,
+      "explanation": "五 đọc wǔ, thanh 3.",
+      "sort_order": 3
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000025",
+      "lesson_id": "20000000-0000-4000-8000-000000000009",
+      "prompt": "Trợ từ câu hỏi có/không là?",
+      "choices": [
+        "的",
+        "吗",
+        "和",
+        "在"
+      ],
+      "answer_index": 1,
+      "explanation": "吗 dùng cuối câu hỏi có/không.",
+      "sort_order": 1
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000026",
+      "lesson_id": "20000000-0000-4000-8000-000000000009",
+      "prompt": "“学生” nghĩa là?",
+      "choices": [
+        "Bác sĩ",
+        "Giáo viên",
+        "Học sinh",
+        "Bạn bè"
+      ],
+      "answer_index": 2,
+      "explanation": "Xuésheng = học sinh.",
+      "sort_order": 2
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000027",
+      "lesson_id": "20000000-0000-4000-8000-000000000009",
+      "prompt": "“我是老师” nghĩa là?",
+      "choices": [
+        "Tôi là giáo viên",
+        "Bạn là giáo viên",
+        "Tôi không biết",
+        "Tôi là học sinh"
+      ],
+      "answer_index": 0,
+      "explanation": "我是老师 = Tôi là giáo viên.",
+      "sort_order": 3
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000028",
+      "lesson_id": "20000000-0000-4000-8000-000000000010",
+      "prompt": "“ありがとう” có nghĩa là?",
+      "choices": [
+        "Xin chào",
+        "Cảm ơn",
+        "Không",
+        "Chúc ngủ ngon"
+      ],
+      "answer_index": 1,
+      "explanation": "Arigatō = Cảm ơn.",
+      "sort_order": 1
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000029",
+      "lesson_id": "20000000-0000-4000-8000-000000000010",
+      "prompt": "Khi mới gặp người khác, nói?",
+      "choices": [
+        "おやすみ",
+        "はじめまして",
+        "いただきます",
+        "ただいま"
+      ],
+      "answer_index": 1,
+      "explanation": "Hajimemashite khi gặp lần đầu.",
+      "sort_order": 2
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000030",
+      "lesson_id": "20000000-0000-4000-8000-000000000010",
+      "prompt": "“わたし” là đại từ nào?",
+      "choices": [
+        "Bạn",
+        "Tôi",
+        "Họ",
+        "Chúng ta"
+      ],
+      "answer_index": 1,
+      "explanation": "Watashi = tôi.",
+      "sort_order": 3
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000031",
+      "lesson_id": "20000000-0000-4000-8000-000000000011",
+      "prompt": "Hiragana nào đọc là “a”?",
+      "choices": [
+        "え",
+        "あ",
+        "う",
+        "お"
+      ],
+      "answer_index": 1,
+      "explanation": "あ = a.",
+      "sort_order": 1
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000032",
+      "lesson_id": "20000000-0000-4000-8000-000000000011",
+      "prompt": "Hiragana nào đọc là “i”?",
+      "choices": [
+        "い",
+        "え",
+        "お",
+        "う"
+      ],
+      "answer_index": 0,
+      "explanation": "い = i.",
+      "sort_order": 2
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000033",
+      "lesson_id": "20000000-0000-4000-8000-000000000011",
+      "prompt": "“いえ” có nghĩa là?",
+      "choices": [
+        "Tàu",
+        "Nhà",
+        "Nước",
+        "Hoa"
+      ],
+      "answer_index": 1,
+      "explanation": "Ie = nhà.",
+      "sort_order": 3
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000034",
+      "lesson_id": "20000000-0000-4000-8000-000000000012",
+      "prompt": "は khi là trợ từ chủ đề đọc thế nào?",
+      "choices": [
+        "ha",
+        "wa",
+        "he",
+        "wo"
+      ],
+      "answer_index": 1,
+      "explanation": "Khi làm trợ từ chủ đề, は đọc là wa.",
+      "sort_order": 1
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000035",
+      "lesson_id": "20000000-0000-4000-8000-000000000012",
+      "prompt": "“学生” nghĩa là gì?",
+      "choices": [
+        "Giáo viên",
+        "Học sinh/sinh viên",
+        "Bác sĩ",
+        "Người Nhật"
+      ],
+      "answer_index": 1,
+      "explanation": "Gakusei = học sinh/sinh viên.",
+      "sort_order": 2
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000036",
+      "lesson_id": "20000000-0000-4000-8000-000000000012",
+      "prompt": "Hoàn thành: わたし ___ 学生です。",
+      "choices": [
+        "を",
+        "に",
+        "は",
+        "で"
+      ],
+      "answer_index": 2,
+      "explanation": "Mẫu: わたしは学生です。",
+      "sort_order": 3
+    }
+  ]
+}

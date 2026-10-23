@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "linguanest-media",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "r2_buckets": [
+    { "binding": "MEDIA_BUCKET", "bucket_name": "linguanest-media" }
+  ],
+  "vars": {
+    "ALLOWED_ORIGINS": "http://localhost:5173,https://YOUR-PROJECT.pages.dev",
+    "SUPABASE_URL": "https://YOUR-PROJECT.supabase.co",
+    "SUPABASE_ANON_KEY": "YOUR_SUPABASE_PUBLIC_KEY"
+  }
+}

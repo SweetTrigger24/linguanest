@@ -1,0 +1,152 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+import { PGlite } from '@electric-sql/pglite'
+
+const admin = '00000000-0000-4000-8000-000000000001', member = '00000000-0000-4000-8000-000000000002', other = '00000000-0000-4000-8000-000000000003'
+const lessonId = '11111111-1111-4111-8111-111111111111'
+let db
+async function asUser(id, sql, args = []) {
+  await db.exec('RESET ROLE')
+  await db.query("SELECT set_config('request.jwt.claim.sub',$1,false)", [id])
+  await db.exec('SET ROLE authenticated')
+  try { return await db.query(sql, args) } finally { await db.exec('RESET ROLE') }
+}
+const rpc = async (user, name, args = []) => (await asUser(user, `SELECT public.${name}(${args.map((_, i) => '$' + (i + 1)).join(',')}) AS result`, args)).rows[0].result
+const exam = (type, overrides = {}) => ({ id: '', language_code: 'en', exam_type_id: type, lesson_id: null, title: 'Integration exam', description: '', duration_minutes: 30, status: 'published', version: 0, media_keys: [], questions: [
+  { id: 'q1', kind: 'choice', section: 'Reading', prompt: 'Pick greeting', passage: 'Hello!', choices: ['Hello', 'Goodbye'], answers: ['0'], explanation: 'Greeting', points: 2 },
+  { id: 'q2', kind: 'short', section: 'Listening', prompt: 'Write hello world', passage: '', choices: [], answers: ['hello world'], explanation: '', points: 3 },
+  { id: 'q3', kind: 'essay', section: 'Writing', prompt: 'Introduce yourself', passage: '', choices: [], answers: [], explanation: 'Rubric', points: 5 },
+], ...overrides })
+test.before(async () => {
+  db = new PGlite()
+  await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;
+    CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,raw_user_meta_data jsonb DEFAULT '{}');
+    CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULLIF(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+    GRANT USAGE ON SCHEMA public,auth TO authenticated,anon,service_role;
+    GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated,anon,service_role;`)
+  for (const name of ['001_schema.sql', '002_seed.sql', '003_learning_platform.sql']) {
+    let sql = await fs.readFile(new URL('../supabase/' + name, import.meta.url), 'utf8')
+    // PGlite uses PostgreSQL's built-in gen_random_uuid; pgcrypto is not installed here.
+    sql = sql.replace('CREATE EXTENSION IF NOT EXISTS pgcrypto;', '')
+    await db.exec(sql)
+  }
+  await db.query('INSERT INTO auth.users(id,email) VALUES($1,$2),($3,$4),($5,$6)', [admin,'admin@example.com',member,'member@example.com',other,'other@example.com'])
+  await db.exec(`UPDATE public.profiles SET is_active=true; UPDATE public.profiles SET role='admin' WHERE id='${admin}';`)
+})
+test.after(async () => { await db?.close() })
+
+test('migration preserves lesson quizzes and closes direct answer/score access', async () => {
+  assert.equal((await db.query('SELECT count(*)::integer AS n FROM public.exams')).rows[0].n, 12)
+  assert.equal((await asUser(member, 'SELECT count(*)::integer AS n FROM public.lessons')).rows[0].n, 12)
+  for (const table of ['exam_versions', 'exam_runs', 'exercises', 'quiz_attempts', 'flashcard_reviews']) await assert.rejects(asUser(member, `SELECT * FROM public.${table}`), /permission denied/)
+  await assert.rejects(asUser(member, "UPDATE public.profiles SET role='admin' WHERE id=$1", [member]), /permission denied/)
+  await assert.rejects(asUser(member, 'INSERT INTO public.user_progress(user_id,lesson_id,xp) VALUES($1,$2,100)', [member,lessonId]), /permission denied/)
+  await rpc(member, 'update_my_profile', ['My updated name'])
+  assert.equal((await asUser(member, 'SELECT display_name FROM public.profiles WHERE id=$1', [member])).rows[0].display_name, 'My updated name')
+  assert.equal((await asUser(member, 'SELECT * FROM public.profiles WHERE id=$1', [other])).rows.length, 0)
+  await assert.rejects(rpc(member, 'member_summaries'), /Chỉ quản trị/)
+})
+test('new signups remain inactive; locked and forced-password accounts cannot access content or RPCs', async () => {
+  const unapproved='00000000-0000-4000-8000-000000000004'
+  await db.query('INSERT INTO auth.users(id,email) VALUES($1,$2)', [unapproved,'stranger@example.com'])
+  assert.equal((await asUser(unapproved,'SELECT * FROM public.lessons')).rows.length,0)
+  await assert.rejects(rpc(unapproved,'learning_summary'),/Không có quyền/)
+  await db.query('UPDATE public.profiles SET must_change_password=true WHERE id=$1',[other])
+  assert.equal((await asUser(other,'SELECT * FROM public.exam_types')).rows.length,0)
+  await assert.rejects(rpc(other,'learning_summary'),/Không có quyền/)
+  await db.query('UPDATE public.profiles SET must_change_password=false,is_active=false WHERE id=$1',[other])
+  assert.equal((await asUser(other,'SELECT * FROM public.lessons')).rows.length,0)
+  await db.query('UPDATE public.profiles SET is_active=true WHERE id=$1',[other])
+})
+test('server grading, revisions, snapshot preservation, authorization and idempotent submit', async () => {
+  const type = (await db.query("SELECT id FROM public.exam_types WHERE language_code='en' AND name='IELTS'")).rows[0].id
+  const doc = exam(type), id = await rpc(admin, 'save_exam', [doc])
+  await assert.rejects(rpc(member,'get_exam_document',[id]), /Chỉ quản trị/)
+  await assert.rejects(rpc(member,'save_exam',[doc]), /Chỉ quản trị/)
+  let run = await rpc(member,'start_exam',[id])
+  assert.equal(run.questions[0].answers, undefined); assert.equal(run.questions[0].explanation, undefined)
+  assert.equal((await rpc(member,'start_exam',[id])).id, run.id)
+  await assert.rejects(rpc(other,'get_exam_run',[run.id]),/Không tìm thấy/)
+  await rpc(admin, 'save_exam', [{ ...doc, id, version: 1, questions: doc.questions.map(q => q.id==='q1'?{...q,answers:['1']}:q) }])
+  await assert.rejects(rpc(admin, 'save_exam', [{ ...doc, id, version: 1 }]), /Đề đã được sửa/)
+  assert.equal((await rpc(member,'get_exam_run',[run.id])).version, 1)
+  const responses = { q1: '0', q2: '  HELLO   world ', q3: 'My name is Linh.' }
+  assert.equal(await rpc(member,'save_exam_responses',[run.id,responses,0]),1)
+  await assert.rejects(rpc(member,'save_exam_responses',[run.id,responses,0]),/thiết bị khác/)
+  await assert.rejects(rpc(other,'submit_exam',[run.id,responses,1]),/Không tìm thấy/)
+  run=await rpc(member,'submit_exam',[run.id,responses,1])
+  assert.equal(run.status,'pending_review'); assert.equal(run.score,5); assert.equal(run.max_score,10)
+  assert.equal(run.questions[0].answers[0],'0'); assert.equal(run.responses.q3,responses.q3)
+  assert.equal((await rpc(member,'submit_exam',[run.id,{},0])).score,5)
+  await assert.rejects(rpc(member,'grade_exam',[run.id,{q3:{score:5,feedback:'self'}}]),/Chỉ quản trị/)
+  await assert.rejects(rpc(admin,'grade_exam',[run.id,{q3:{score:6,feedback:'invalid'}}]),/không hợp lệ/)
+  run=await rpc(admin,'grade_exam',[run.id,{q3:{score:4,feedback:'Good work'}}])
+  assert.equal(run.status,'graded'); assert.equal(run.score,9)
+  assert.equal((await rpc(member,'learning_summary')).xp,45)
+  await assert.rejects(rpc(admin,'grade_exam',[run.id,{q3:{score:3}}]),/không còn chờ chấm/)
+  assert.equal((await rpc(member,'list_exam_runs',[0,false]))[0].grades.q3.feedback,'Good work')
+  await assert.rejects(rpc(member,'list_exam_runs',[0,true]),/Không có quyền/)
+})
+test('deadline uses saved answers, ignores late modifications and rejects further saves', async () => {
+  const type=(await db.query("SELECT id FROM public.exam_types WHERE language_code='en' LIMIT 1")).rows[0].id
+  const doc=exam(type,{questions:[exam(type).questions[0]]}), id=await rpc(admin,'save_exam',[doc]), run=await rpc(member,'start_exam',[id])
+  await rpc(member,'save_exam_responses',[run.id,{q1:'0'},0])
+  await db.query("UPDATE public.exam_runs SET deadline=now()-interval '1 second' WHERE id=$1",[run.id])
+  await assert.rejects(rpc(member,'save_exam_responses',[run.id,{q1:'1'},1]),/hết giờ/)
+  const result=await rpc(member,'submit_exam',[run.id,{q1:'1'},1])
+  assert.equal(result.responses.q1,'0'); assert.equal(result.score,2)
+})
+test('lesson CRUD saves atomically, hides drafts, and awards completion only once', async () => {
+  const course=(await db.query("SELECT id FROM public.courses WHERE language_code='en'")).rows[0].id
+  const doc={ id:'',course_id:course,title:'New lesson',status:'draft',media_keys:[] }, words=[{id:crypto.randomUUID(),term:'hello',meaning:'xin chào'}]
+  const id=await rpc(admin,'save_lesson',[doc,words])
+  assert.equal((await asUser(member,'SELECT id FROM public.lessons WHERE id=$1',[id])).rows.length,0)
+  await assert.rejects(rpc(member,'complete_lesson',[id]),/Không thể/)
+  await rpc(admin,'save_lesson',[{...doc,id,status:'published'},words])
+  await rpc(member,'complete_lesson',[id]); await rpc(member,'complete_lesson',[id])
+  assert.equal((await db.query('SELECT count(*)::integer n FROM public.user_progress WHERE user_id=$1 AND lesson_id=$2',[member,id])).rows[0].n,1)
+  await assert.rejects(rpc(admin,'save_lesson',[{...doc,id,title:'Should rollback'},[{id:crypto.randomUUID(),term:'',meaning:'bad'}]]),/không được trống/)
+  assert.equal((await db.query('SELECT title FROM public.lessons WHERE id=$1',[id])).rows[0].title,'New lesson')
+  await rpc(admin,'save_lesson',[{...doc,id,status:'archived'},[]])
+  assert.equal((await asUser(member,'SELECT id FROM public.lessons WHERE id=$1',[id])).rows.length,0)
+  assert.equal((await db.query('SELECT count(*)::integer n FROM public.user_progress WHERE lesson_id=$1',[id])).rows[0].n,1)
+})
+test('media follows published content, retains attempt attachments and prevents unsafe deletion', async () => {
+  const key=`files/${crypto.randomUUID()}.mp3`, type=(await db.query("SELECT id FROM public.exam_types WHERE language_code='en' LIMIT 1")).rows[0].id
+  await db.query('INSERT INTO public.media_files(key,filename,content_type,size) VALUES($1,$2,$3,100)',[key,'test.mp3','audio/mpeg'])
+  const can=async user=>(await db.query('SELECT public.can_access_media_for($1,$2) AS ok',[user,key])).rows[0].ok
+  assert.equal(await can(member),false); assert.equal(await can(admin),true)
+  const doc=exam(type,{media_keys:[key],status:'draft'}), id=await rpc(admin,'save_exam',[doc])
+  assert.equal(await can(member),false)
+  await rpc(admin,'save_exam',[{...doc,id,version:1,status:'published'}]); assert.equal(await can(member),true)
+  const run=await rpc(member,'start_exam',[id])
+  await rpc(admin,'save_exam',[{...doc,id,version:2,status:'archived',media_keys:[]}])
+  assert.equal(await can(other),false); assert.equal(await can(member),true)
+  await assert.rejects(db.query('SELECT public.reserve_media_delete($1)',[key]),/lịch sử/)
+  await assert.rejects(rpc(member,'can_access_media_for',[member,key]),/permission denied/)
+  await assert.rejects(rpc(member,'reserve_media_delete',[key]),/permission denied/)
+  assert.equal((await rpc(member,'get_exam_run',[run.id])).media_keys[0],key)
+  const unused=`files/${crypto.randomUUID()}.pdf`
+  await db.query('INSERT INTO public.media_files(key,filename,content_type,size) VALUES($1,$2,$3,100)',[unused,'unused.pdf','application/pdf'])
+  await db.query('SELECT public.reserve_media_delete($1)',[unused])
+  await assert.rejects(rpc(admin,'save_exam',[exam(type,{media_keys:[unused]})]),/đang được xóa/)
+})
+test('XP aggregates every historical attempt, independently of the 20-row history page', async () => {
+  const before=await rpc(member,'learning_summary')
+  const lesson=(await db.query('SELECT id FROM public.lessons LIMIT 1')).rows[0].id
+  await db.query('INSERT INTO public.quiz_attempts(user_id,lesson_id,correct_count,total_count) SELECT $1,$2,2,3 FROM generate_series(1,205)',[member,lesson])
+  const after=await rpc(member,'learning_summary')
+  assert.equal(after.xp-before.xp,2050); assert.equal(after.legacy_count-before.legacy_count,205)
+  assert.equal((await rpc(admin,'member_summaries')).find(s=>s.id===member).xp,after.xp)
+})
+test('server rejects malformed questions and responses', async () => {
+  const type=(await db.query("SELECT id FROM public.exam_types WHERE language_code='en' LIMIT 1")).rows[0].id
+  const doc=exam(type)
+  await assert.rejects(rpc(admin,'save_exam',[{...doc,questions:[{...doc.questions[0],answers:['8']}]}]),/ngoài phạm vi/)
+  await assert.rejects(rpc(admin,'save_exam',[{...doc,questions:[]}]),/1–200/)
+  await assert.rejects(rpc(admin,'save_exam',[{...doc,questions:[doc.questions[0],doc.questions[0]]}]),/trùng/)
+  const id=await rpc(admin,'save_exam',[doc]),r=await rpc(member,'start_exam',[id])
+  await assert.rejects(rpc(member,'save_exam_responses',[r.id,{q999:'fake'},0]),/không hợp lệ/)
+  await assert.rejects(rpc(member,'save_exam_responses',[r.id,{q1:4},0]),/không hợp lệ/)
+})

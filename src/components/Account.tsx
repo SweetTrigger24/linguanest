@@ -1,0 +1,15 @@
+import { useState } from 'react'
+import { renameProfile, workerJSON } from '../lib/api'
+import { cloudMode, supabase } from '../lib/supabase'
+import { errorMessage } from '../lib/content'
+import type { Profile } from '../lib/types'
+import { Notice } from './Common'
+
+export default function Account({ profile, refresh }: { profile: Profile; refresh: () => Promise<void> }) {
+  const [name, setName] = useState(profile.display_name), [current, setCurrent] = useState(''), [password, setPassword] = useState(''), [confirm, setConfirm] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState('')
+  return <div className="stack"><div className="page-heading"><div><span className="eyebrow">TÀI KHOẢN CỦA BẠN</span><h1>{profile.must_change_password ? 'Đổi mật khẩu tạm' : 'Thông tin tài khoản'}</h1><p>{profile.username || 'Tài khoản được quản trị cấp'}</p></div></div>
+    {profile.must_change_password && <Notice>Bạn cần đặt mật khẩu riêng trước khi truy cập nội dung học.</Notice>}{error && <Notice error>{error}</Notice>}{message && <Notice>{message}</Notice>}
+    {!profile.must_change_password && <form className="card-box editor-form" onSubmit={async e => { e.preventDefault(); setBusy(true); setError(''); setMessage(''); try { await renameProfile(name.trim()); await refresh(); setMessage('Đã cập nhật tên hiển thị.') } catch (e) { setError(errorMessage(e)) } finally { setBusy(false) } }}><h2>Hồ sơ</h2><label>Tên hiển thị<input required maxLength={80} value={name} onChange={e => setName(e.target.value)} /></label><p>Tên đăng nhập và vai trò do quản trị quản lý.</p><button className="btn-primary" disabled={busy}>Lưu hồ sơ</button></form>}
+    <form className="card-box editor-form" onSubmit={async e => { e.preventDefault(); setBusy(true); setError(''); setMessage(''); try { if (password !== confirm) throw Error('Mật khẩu xác nhận không khớp.'); if (password === current) throw Error('Hãy chọn mật khẩu khác mật khẩu hiện tại.'); await workerJSON('/account/password', { current_password: current, password }); setCurrent(''); setPassword(''); setConfirm(''); await supabase!.auth.signOut(); } catch (e) { setError(errorMessage(e)) } finally { setBusy(false) } }}><h2>Đổi mật khẩu</h2>{!cloudMode && <Notice>Chế độ demo không có mật khẩu. Chức năng này hoạt động sau khi kết nối Supabase và Worker.</Notice>}<label>Mật khẩu hiện tại<input type="password" required autoComplete="current-password" value={current} onChange={e => setCurrent(e.target.value)} /></label><label>Mật khẩu mới<input type="password" required minLength={10} autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} /></label><label>Nhập lại mật khẩu mới<input type="password" required minLength={10} autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} /></label><p>Ít nhất 10 ký tự. Sau khi đổi thành công, hãy đăng nhập lại bằng mật khẩu mới.</p><button className="btn-primary" disabled={!cloudMode || busy}>{busy ? 'Đang xử lý…' : 'Đổi mật khẩu'}</button></form>
+  </div>
+}
