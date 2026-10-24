@@ -11,6 +11,7 @@ export interface Lesson {
 export interface ExamType { id: string; language_code: Lang; name: string }
 export interface Exam { mode?: 'practice' | 'mock'; id: string; language_code: Lang; exam_type_id: string; lesson_id: string | null; title: string; description: string; duration_minutes: number; status: Status; version: number; media_keys: string[] }
 export interface Question {
+  title?: string; hint?: string; max_attempts?: number; reveal_mode?: 'after_attempts' | 'after_check'; check_mode?: 'manual' | 'instant';
   id: string; section: string; kind: 'choice' | 'short' | 'essay' | 'multi' | 'gaps' | 'matching'; prompt: string; passage: string; choices: string[];
   group_id?: string; media_keys?: string[]; slots?: string[]; word_limit?: number; labels_only?: boolean; rubric?: string;
   answers?: string[]; explanation?: string; points: number;
@@ -30,9 +31,14 @@ export interface ExamRun {
 }
 export interface Profile { id: string; display_name: string; username: string | null; role: 'admin' | 'member'; is_active: boolean; must_change_password: boolean }
 export interface Progress { lesson_id: string; completed_at: string; xp: number }
-export interface Summary { xp: number; progress: Progress[]; exam_count: number; legacy_count: number }
+export interface LessonStudyStatus { lesson_id: string; started_at: string; completed_runs: number; active_run: boolean; score: number | null; max_score: number | null }
+export interface Summary { lesson_status?: LessonStudyStatus[]; dedicated_exam_count?: number; exam_xp?: number; xp: number; progress: Progress[]; exam_count: number; legacy_count: number }
 export interface MediaFile { key: string; filename: string; content_type: string; size: number; state: 'active' | 'deleting'; created_at: string }
-export interface ContentData { courses: Course[]; lessons: Lesson[]; vocabulary: Word[]; exams: Exam[]; exam_types: ExamType[] }
+export interface PracticeDocument { lesson_id: string; version: number; questions: Question[]; layout?: ExamLayout; media_keys: string[]; enabled: boolean; source_exam_id?: string | null }
+export interface PracticeSummary { lesson_id: string; question_count: number; enabled: boolean; source_exam_id: string | null }
+export interface PracticeCheck { tries: number; response: string; correct: boolean | null; score: number; locked: boolean; revealed: boolean; slot_correct?: boolean[] }
+export interface PracticeRun { id: string; lesson_id: string; title: string; version: number; questions: Question[]; layout?: ExamLayout; media_keys: string[]; responses: Record<string, string>; checks: Record<string, PracticeCheck>; revision: number; status: 'in_progress' | 'completed'; started_at: string; completed_at: string | null }
+export interface ContentData { courses: Course[]; lessons: Lesson[]; vocabulary: Word[]; exams: Exam[]; exam_types: ExamType[]; practices?: PracticeSummary[] }
 export const LANG_DETAILS: Record<Lang, { flag: string; label: string; color: string; soft: string; tts: string }> = {
   en: { flag: '🇬🇧', label: 'Tiếng Anh', color: '#6258df', soft: '#eeebff', tts: 'en-US' },
   fr: { flag: '🇫🇷', label: 'Tiếng Pháp', color: '#eb8a68', soft: '#fff0e8', tts: 'fr-FR' },

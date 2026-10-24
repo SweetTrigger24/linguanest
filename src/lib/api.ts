@@ -1,3 +1,4 @@
+import type { PracticeDocument, PracticeRun, PracticeSummary } from './types'
 import { cloudMode, mediaWorkerUrl, supabase } from './supabase'
 import * as demo from './demo'
 import { errorMessage } from './content'
@@ -15,9 +16,9 @@ async function all<T>(table: string, order = 'id'): Promise<T[]> {
 }
 export async function loadContent(): Promise<ContentData> {
   if (!cloudMode) return demo.demoStore()
-  const [courses, lessons, vocabulary, exams, exam_types] = await Promise.all([all<ContentData['courses'][number]>('courses'), all<Lesson>('lessons'), all<Word>('vocabulary'), all<ContentData['exams'][number]>('exams'), all<ExamType>('exam_types')])
+  const [courses, lessons, vocabulary, exams, exam_types, practices] = await Promise.all([all<ContentData['courses'][number]>('courses'), all<Lesson>('lessons'), all<Word>('vocabulary'), all<ContentData['exams'][number]>('exams'), all<ExamType>('exam_types'), rpc<PracticeSummary[]>('list_lesson_practices')])
   lessons.sort((a, b) => a.sort_order - b.sort_order); vocabulary.sort((a, b) => a.sort_order - b.sort_order)
-  return { courses, lessons, vocabulary, exams, exam_types }
+  return { courses, lessons, vocabulary, exams, exam_types, practices }
 }
 export async function loadProfile(id: string): Promise<Profile> {
   if (!cloudMode) return demo.demoProfile()
@@ -52,3 +53,16 @@ export const uploadMedia = (file: File) => worker<MediaFile>('/media?filename=' 
 export const deleteMedia = (key: string) => worker('/media?key=' + encodeURIComponent(key), { method: 'DELETE' })
 export const listMembers = (): Promise<Profile[]> => cloudMode ? all('profiles') : Promise.resolve([demo.demoProfile()])
 export const memberSummaries = (): Promise<{ id: string; lessons: number; exams: number; xp: number }[]> => cloudMode ? rpc('member_summaries') : Promise.resolve([{ id: 'demo', lessons: demo.demoSummary().progress.length, exams: demo.demoSummary().exam_count, xp: demo.demoSummary().xp }])
+
+export async function lessonPractice(id: string): Promise<PracticeDocument> { const doc: PracticeDocument = cloudMode ? await rpc('get_lesson_practice', { p_lesson: id }) : demo.demoPracticeDocument(id); return { ...doc, layout: doc.layout || undefined } }
+export async function saveLessonBundle(doc: Lesson, words: Word[], practice: PracticeDocument): Promise<string> { return cloudMode ? rpc('save_lesson_bundle', { p_doc: doc, p_words: words, p_practice: practice }) : demo.demoLessonBundle(doc, words, practice) }
+export async function startPractice(id: string): Promise<PracticeRun> { return cloudMode ? rpc('start_lesson_practice', { p_lesson: id }) : demo.demoStartPractice(id) }
+export async function getPracticeRun(id: string): Promise<PracticeRun> { return cloudMode ? rpc('get_practice_run', { p_id: id }) : demo.demoPracticeRun(id) }
+export async function practiceHistory(id: string): Promise<PracticeRun[]> { return cloudMode ? rpc('practice_history', { p_lesson: id }) : demo.demoPracticeHistory(id) }
+export async function savePracticeAnswers(id: string, responses: Record<string, string>, revision: number): Promise<PracticeRun> { return cloudMode ? rpc('save_practice_answers', { p_id: id, p_responses: responses, p_revision: revision }) : demo.demoPracticeAnswers(id, responses, revision) }
+export async function checkPracticeAnswer(id: string, question: string, response: string, revision: number, reveal = false): Promise<PracticeRun> { return cloudMode ? rpc('check_practice_answer', { p_id: id, p_question: question, p_response: response, p_revision: revision, p_reveal: reveal }) : demo.demoCheckPractice(id, question, response, revision, reveal) }
+export async function finishPractice(id: string, responses: Record<string, string>, revision: number): Promise<PracticeRun> { return cloudMode ? rpc('finish_practice', { p_id: id, p_responses: responses, p_revision: revision }) : demo.demoFinishPractice(id, responses, revision) }
+
+export async function beginLesson(id: string) { return cloudMode ? rpc('begin_lesson', { p_id: id }) : demo.demoBeginLesson(id) }
+export async function examHistory(offset = 0): Promise<ExamRun[]> { return cloudMode ? rpc('exam_history', { p_offset: offset }) : demo.demoExamHistory(offset) }
+export async function lessonExamHistory(id: string | null, offset = 0): Promise<ExamRun[]> { return cloudMode ? rpc('lesson_exam_history', { p_lesson: id, p_offset: offset }) : demo.demoLessonExamHistory(id, offset) }

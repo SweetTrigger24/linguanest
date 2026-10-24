@@ -24,8 +24,9 @@ Không có biến môi trường Supabase: ứng dụng chạy **demo**, lưu n�
 ## Chức năng
 
 - Tài khoản nội bộ do quản trị cấp; tên đăng nhập, mật khẩu; đổi tên hiển thị và mật khẩu. Mật khẩu tạm bắt buộc đổi trước khi học. Quên mật khẩu: liên hệ quản trị, không cần SMTP.
-- Bài học: tạo, sửa, lưu nháp, xem trước, xuất bản, lưu trữ và nhân bản; từ vựng nhập bằng form hoặc CSV; nhiều học liệu đính kèm.
-- Đề thi: phân loại theo ngôn ngữ và kỳ thi. Mặc định IELTS/TOEIC/Cambridge, DELF/DALF/TCF, HSK/HSKK, JLPT/J.TEST; quản trị có thể thêm loại mới. Mỗi bài học có thể gắn một đề bài tập; đề luyện thi độc lập không giới hạn theo bài học.
+- Bài học: tạo, sửa, lưu nháp, xem trước, xuất bản, lưu trữ và nhân bản; từ vựng nhập bằng form hoặc CSV; nhiều học liệu đính kèm. Editor có ba tab Nội dung / Bài tập luyện tập / Xem trước; câu hỏi được soạn, nhân bản, xóa có xác nhận, đổi thứ tự và xem trước trực tiếp.
+- Luyện tập bài học: giao diện thẻ teal, tiến độ, gợi ý, kiểm tra từng câu, số lần thử, giải thích, nhiều đáp án hợp lệ do người soạn khai báo, tổng kết và làm lại. Tự lưu câu trả lời, tiếp tục từ lịch sử ngay trong bài học; mặc định không có đồng hồ. Không cộng XP cho lượt luyện tập mới, tránh cộng trùng với hoàn thành lý thuyết.
+- Đề thi: phân loại theo ngôn ngữ và kỳ thi. Mặc định IELTS/TOEIC/Cambridge, DELF/DALF/TCF, HSK/HSKK, JLPT/J.TEST; quản trị có thể thêm loại mới. Bài tập kiến thức nằm ngay trong bài học; danh sách Đề thi chỉ dành cho đề chứng chỉ, đề mô phỏng và bài kiểm tra tổng hợp. Liên kết bài học với một đề kiểm tra chuyên dụng vẫn được giữ.
 - Đề thi thử 1–300 phút hoặc luyện tập không giới hạn giờ, tối đa 200 câu; có phần, nhóm dùng chung học liệu và câu hỏi. Hỗ trợ chọn một/nhiều đáp án, điền từ, nhiều ô trống, nối thông tin và tự luận.
 - Nhập CSV có mẫu, xem trước và lỗi theo dòng; bản nháp người soạn tự lưu trên máy. Lưu bản nháp lên máy chủ bằng nút Lưu để làm tiếp trên thiết bị khác.
 - Đề được chấm trên PostgreSQL. Đáp án không được gửi tới học viên đang làm bài. Trắc nghiệm nhiều đáp án chỉ nhận điểm khi chọn đúng toàn bộ tập đáp án. Điền nhiều ô/nối chia đều điểm cho các mục (điểm tối đa phải chia hết số mục); điền từ so sánh Unicode NFC, bỏ khoảng trắng thừa và không phân biệt hoa/thường, vẫn phân biệt dấu và dấu câu. Tự luận chấm thủ công, có nhận xét.
@@ -47,12 +48,14 @@ Chạy trong SQL Editor theo đúng thứ tự:
 2. `supabase/002_seed.sql`
 3. `supabase/003_learning_platform.sql`
 4. `supabase/004_structured_content.sql`
+5. `supabase/006_lesson_practice.sql` (bỏ qua 005 nếu dùng R2)
+6. `supabase/007_study_status.sql`
 
 ### Nâng cấp dự án cũ
 
-Sao lưu trước. Nếu đã chạy 003: chạy **004**, không chạy lại 001–003. Nếu mới có 001/002: chạy **003 → 004**. Migration 004 thêm cấu trúc nội dung và cách chấm mới; không viết lại snapshot/lịch sử cũ. Bài học cũ được hiển thị thành khối khi mở; lưu lần đầu sẽ ghi cấu trúc mới. Không chạy lại 001 sau các migration mới vì sẽ khôi phục chính sách phân quyền cũ.
+Sao lưu trước. Nếu đã chạy 006: chạy **007**. Nếu đã chạy 004: chạy **006 → 007**. Nếu đã chạy 003: chạy **004 → 006 → 007**, không chạy lại 001–003. Nếu mới có 001/002: chạy **003 → 004 → 006 → 007**. Migration 004 thêm cấu trúc nội dung và cách chấm mới; không viết lại snapshot/lịch sử cũ. Bài học cũ được hiển thị thành khối khi mở; lưu lần đầu sẽ ghi cấu trúc mới. Không chạy lại 001 sau các migration mới vì sẽ khôi phục chính sách phân quyền cũ.
 
-Nếu đã chạy 004 thì chuyển sang R2 không cần migration database mới: bảng `media_files` vẫn lưu key, tên file và quyền tham chiếu. `005_private_storage.sql` được giữ lại cho hệ thống từng dùng Supabase Storage; **không cần chạy 005 cho R2**. Nếu đã chạy 005, giữ nguyên bucket/policy cũ trong thời gian chuyển file; không cần xóa dữ liệu hay hoàn tác migration.
+Riêng việc chuyển nơi lưu file sang R2 không cần migration database mới; tính năng luyện tập bài học cần 006: bảng `media_files` vẫn lưu key, tên file và quyền tham chiếu. `005_private_storage.sql` được giữ lại cho hệ thống từng dùng Supabase Storage; **không cần chạy 005 cho R2**. Nếu đã chạy 005, giữ nguyên bucket/policy cũ trong thời gian chuyển file; không cần xóa dữ liệu hay hoàn tác migration.
 
 Nếu có file thật trong Supabase Storage, xem mục chuyển học liệu sang R2 bên dưới trước khi triển khai Worker mới. SQL không sao chép nội dung file.
 
@@ -110,7 +113,7 @@ Secret Supabase chỉ nằm ở Worker. Có thể dùng legacy service-role JWT 
 
 - **Thử giao diện:** chạy `npm run dev` ở thư mục gốc khi chưa đặt biến Supabase, dùng demo localStorage như trước; chưa upload file thật lên R2.
 - **Thử Worker với R2 giả lập local:** cấu hình Supabase trong `media-worker/wrangler.jsonc`, tạo file `media-worker/.dev.vars` chứa `SUPABASE_SERVICE_ROLE_KEY=...`, rồi chạy `npm run dev` trong `media-worker`. Wrangler dùng R2 local khi không bật `remote`; không cần bucket thật cho bước này. File local không tự được đưa lên R2 khi deploy.
-- Khi thử Worker, frontend cần `.env` có cùng Supabase URL/public key và `VITE_MEDIA_WORKER_URL=http://localhost:8787`; khởi động lại Vite. Worker vẫn gọi Auth/database Supabase đã cấu hình, nên dùng project thử nghiệm với migrations 001–004 và tài khoản admin. Đây không phải chế độ hoàn toàn offline. `.dev.vars` đã được bỏ qua bởi Git.
+- Khi thử Worker, frontend cần `.env` có cùng Supabase URL/public key và `VITE_MEDIA_WORKER_URL=http://localhost:8787`; khởi động lại Vite. Worker vẫn gọi Auth/database Supabase đã cấu hình, nên dùng project thử nghiệm với migrations 001–004, 006–007 và tài khoản admin. Đây không phải chế độ hoàn toàn offline. `.dev.vars` đã được bỏ qua bởi Git.
 - `npm test` kiểm tra upload/đọc/xóa với R2 mock và PostgreSQL nhúng, không cần tài khoản dịch vụ.
 
 ### Chuyển học liệu đã có từ Supabase Storage sang R2
@@ -179,16 +182,23 @@ flowchart LR
   W -->|Binding MEDIA_BUCKET| R2[R2 private]
 ```
 
-- [src/main.tsx](src/main.tsx) gắn React vào DOM, import `styles.css` trước `platform.css`.
-- [src/App.tsx](src/App.tsx) dùng state `Page`, `lang`, `lessonId`, `run`, `adminTab` để điều hướng; **chưa dùng React Router**. Thêm màn hình cần cập nhật state/nav và nhánh render tương ứng. Trang admin được lazy-load.
+- [src/main.tsx](src/main.tsx) gắn React vào DOM, import lần lượt `styles.css`, `platform.css`, `practice.css`.
+- [src/App.tsx](src/App.tsx) dùng state `Page`, `lang`, `lessonId`, `run`, `practiceRun`, `adminTab` để điều hướng; **chưa dùng React Router**. Thêm màn hình cần cập nhật state/nav và nhánh render tương ứng. Trang admin được lazy-load.
 - [src/lib/supabase.ts](src/lib/supabase.ts) bật `cloudMode` khi có cả URL và public key. Thiếu `VITE_MEDIA_WORKER_URL` không tắt cloudMode: nội dung DB vẫn có thể chạy, thao tác Worker báo thiếu cấu hình. Khi đổi `.env`, khởi động lại Vite hoặc build lại frontend.
-- [src/lib/api.ts](src/lib/api.ts) là điểm nối UI với demo/cloud. `loadContent()` tải courses, lessons, vocabulary, exams, exam_types; helper `all()` đọc theo lô 500 rồi gom vào bộ nhớ. Hiện tìm kiếm/lọc nội dung chủ yếu ở client; nếu tăng quy mô lớn, đây là điểm cần phân trang/lọc phía server.
+- [src/lib/api.ts](src/lib/api.ts) là điểm nối UI với demo/cloud. `loadContent()` tải courses, lessons, vocabulary, exams, exam_types và summary luyện tập qua `list_lesson_practices`; helper `all()` đọc theo lô 500 rồi gom vào bộ nhớ. Hiện tìm kiếm/lọc nội dung chủ yếu ở client; nếu tăng quy mô lớn, đây là điểm cần phân trang/lọc phía server.
 
 ### File và trách nhiệm
 
 | File | Chức năng / điểm tìm nhanh |
 | --- | --- |
 | [src/App.tsx](src/App.tsx) | `Login`, session/profile gate, dashboard, `LessonPage`, `ExamCatalog`, `Listening`, `History`; tải lại nội dung và XP sau thao tác. |
+| [src/components/StudyBadge.tsx](src/components/StudyBadge.tsx) | `studyState`/`lessonStudyState`: màu và nhãn theo tiến độ cá nhân, điểm lần hoàn thành gần nhất; dùng ở danh sách, trang bài học và khu vực luyện tập. |
+| [src/components/LegacyPracticeHistory.tsx](src/components/LegacyPracticeHistory.tsx) | Lượt bài tập cũ theo bài học hoặc chưa gắn bài; phân trang, xem/tiếp tục bằng ExamPlayer và quay lại Bài học. |
+| [src/components/LessonEditor.tsx](src/components/LessonEditor.tsx) | Ba tab nội dung/luyện tập/preview, lưu nguyên gói bài học, bản nháp và nhập bài ôn cũ. |
+| [src/components/PracticeEditor.tsx](src/components/PracticeEditor.tsx) | Thêm/sửa/xóa/nhân bản/đổi thứ tự câu, lựa chọn đáp án trực quan, CSV, preview tương tác. |
+| [src/components/PracticeQuestion.tsx](src/components/PracticeQuestion.tsx) | Thẻ câu hỏi dùng chung cho preview và học viên: lựa chọn, điền, nhiều ô, nối, tự luận; gợi ý, Enter, feedback, giải thích. |
+| [src/components/LessonPractice.tsx](src/components/LessonPractice.tsx), [src/components/PracticePlayer.tsx](src/components/PracticePlayer.tsx) | Nút bắt đầu/lịch sử trong bài học gọi `onOpen` về App; App giữ `practiceRun` và render player ở màn hình `practice` riêng, ẩn lý thuyết; player tự lưu, hàng đợi revision, điều hướng, kiểm tra, tổng kết và làm lại. |
+| [src/lib/practice.ts](src/lib/practice.ts), [src/lib/useUnsavedChanges.ts](src/lib/useUnsavedChanges.ts), [src/practice.css](src/practice.css) | Validation/check/payload demo, nhận diện bài tập cũ; cảnh báo rời trang chưa lưu; bố cục teal responsive và reduced motion. |
 | [src/components/ContentAdmin.tsx](src/components/ContentAdmin.tsx) | Danh sách/tìm kiếm bài và đề, tạo/nhân bản/lưu trữ, thêm loại kỳ thi; `LessonEditor` soạn bài và từ vựng; mở `ExamEditor`. |
 | [src/components/LessonBlocks.tsx](src/components/LessonBlocks.tsx) | `BlockEditor`, `LessonContent`, `RichText`, `QuickQuiz`: soạn và hiển thị khối lý thuyết, bảng, công thức, ví dụ, media, bài tập nhanh. |
 | [src/components/ExamEditor.tsx](src/components/ExamEditor.tsx) | Cây phần/nhóm/câu, chọn câu để sửa, mẫu đề, nhập CSV, xem trước, lưu nháp/xuất bản; `prepare()` gán nhóm cho câu cũ/CSV, `ordered()` sắp câu theo layout. |
@@ -204,7 +214,7 @@ flowchart LR
 | [src/styles.css](src/styles.css), [src/platform.css](src/platform.css) | Styles nền, sau đó styles mở rộng cho nền tảng/biên soạn/làm đề. Có CSS cũ còn lưu; thấy class flashcard không có nghĩa tính năng còn hoạt động. |
 | [media-worker/src/index.ts](media-worker/src/index.ts) | Router HTTP, xác thực/profile gate, tài khoản nội bộ, ticket HMAC, kiểm tra upload, R2 put/get/head/delete và HTTP Range. |
 | [media-worker/wrangler.jsonc](media-worker/wrangler.jsonc) | Binding R2 `MEDIA_BUCKET`, bucket `linguanest-media`, Supabase public config, CORS `ALLOWED_ORIGINS`; secret được đặt riêng. |
-| [src/data/demo.json](src/data/demo.json) | Seed demo theo cấu trúc cũ (courses/lessons/vocabulary/exercises), được `demo.ts` chuyển sang đề khi khởi tạo. Không phải dữ liệu cloud. |
+| [src/data/demo.json](src/data/demo.json) | Seed demo theo cấu trúc cũ (courses/lessons/vocabulary/exercises), được `demo.ts` chuyển sang tài liệu đề tương thích rồi sao chép thành luyện tập bài học khi khởi tạo. Không phải dữ liệu cloud. |
 | [tools/validate-data.mjs](tools/validate-data.mjs) | Kiểm tra ID, quan hệ và câu hỏi seed demo; không kiểm tra toàn bộ schema nội dung mới. |
 | [tools/upgrade-authoring.py](tools/upgrade-authoring.py) | Script đã dùng để sinh `004_structured_content.sql` từ một phần `003` và SQL nhúng. Chạy lại sẽ ghi đè file 004; không phải lệnh khởi động hay nâng cấp thường ngày. |
 | [vite.config.ts](vite.config.ts), [public/_redirects](public/_redirects) | Vite React/Tailwind, chia bundle; SPA fallback trên Pages. |
@@ -217,9 +227,11 @@ flowchart LR
 | [002_seed.sql](supabase/002_seed.sql) | Nội dung mẫu cho database mới. Sửa seed không tự cập nhật nội dung của project đã triển khai. |
 | [003_learning_platform.sql](supabase/003_learning_platform.sql) | Accounts gate, bảng đề/phiên bản/lượt làm/media, RLS và quyền RPC; nâng cấp bài tập cũ, lịch sử, XP, chấm tự luận, quyền/xóa file. |
 | [004_structured_content.sql](supabase/004_structured_content.sql) | Blocks/layout, chế độ luyện tập, validation/chấm dạng câu mới, gom media lồng nhau; ghi đè các RPC soạn bài/đề và xử lý lượt làm. |
+| [007_study_status.sql](supabase/007_study_status.sql) | Ghi bắt đầu đọc bài theo user, summary trạng thái/điểm, tách lịch sử thi và bài tập cũ trước phân trang; giữ tổng XP/lịch sử. |
+| [006_lesson_practice.sql](supabase/006_lesson_practice.sql) | Practice riêng theo bài học, RLS/RPC, snapshot/checks/revision, sao chép bài tập cũ an toàn, mở rộng quyền giữ file R2. |
 | [005_private_storage.sql](supabase/005_private_storage.sql) | Legacy, chỉ cho bucket Supabase Storage cũ; không cần cho R2. Giữ nguyên số migration đã tồn tại. |
 
-**Logic hiện hành:** `save_lesson`, `save_exam`, `get_exam_document`, `start_exam`, `run_payload`, `submit_exam` lấy bản trong **004**. `save_exam_responses`, `get_exam_run`, `grade_exam`, `list_exam_runs`, `complete_lesson`, `learning_summary`, `member_summaries`, `can_access_media_for`, `reserve_media_delete` vẫn lấy từ **003**. Không sửa riêng bản hàm trong 003 rồi kỳ vọng hành vi đã được 004 ghi đè sẽ thay đổi.
+**Logic hiện hành:** `save_lesson`, `get_exam_document`, `run_payload`, `submit_exam` từ **004**. `save_exam` và `start_exam` được **006** bọc để chặn sửa/bắt đầu đề nguồn đã chuyển; implementation cũ đổi tên hậu tố `_before_practice`. `can_access_media_for`/`reserve_media_delete` cũng được 006 bọc để xét practice và lịch sử. Các RPC mới cho lesson practice đều ở 006. `save_exam_responses`, `get_exam_run`, `grade_exam`, `list_exam_runs`, `complete_lesson`, `member_summaries` vẫn từ **003**. `learning_summary` được **007** bọc (bản 003 đổi tên `learning_summary_before_study_status`) để bổ sung trạng thái cá nhân và thống kê thi riêng. Trang lịch sử dùng `exam_history` (007); `list_exam_runs` vẫn dành cho tương thích và chấm tự luận. Không chạy lại migration cũ để sửa logic đã bị ghi đè.
 
 <a id="data-flows"></a>
 
@@ -228,6 +240,7 @@ flowchart LR
 ### Mô hình nội dung
 
 - `courses → lessons → vocabulary`. `lessons.blocks` chứa các khối `text/formula/table/example/note/media/quiz`. Trường `body` của khối bảng là chuỗi: hàng ngăn bằng newline, ô ngăn bằng tab; hàng đầu là tiêu đề. Xem `BlockEditor` và `LessonContent` trước khi thay định dạng. `lessonBlocks()` chuyển các trường bài cũ sang khối để hiển thị/biên tập. Khi lưu bài, editor tổng hợp transcript vào `listening_text`; trang Luyện nghe trong `App.tsx` vẫn dựa trên trường này.
+- `lessons → lesson_practices`: một tài liệu luyện tập/bài học, chứa nhiều câu JSONB, version, enabled, layout/media và nguồn chuyển đổi. `lesson_practice_runs` lưu snapshot độc lập, responses, checks, revision và trạng thái in_progress/completed; một lượt đang làm/user/bài. Bảng bật RLS, không cấp quyền SELECT/ghi trực tiếp cho authenticated/anon; chỉ dùng RPC kiểm tra quyền.
 - `exam_types → exams → exam_versions`. `exams` chứa thông tin danh sách và version hiện tại, không chứa đáp án. `exam_versions` giữ `questions` và `layout` theo version. Một lesson gắn tối đa một exam qua `exams.lesson_id UNIQUE`; đề độc lập có `lesson_id = null`.
 - `ExamLayout.sections[] → groups[] → Question.group_id`; nhóm trỏ tới phần bằng `section_id`. `Question.section` là nhãn tương thích, không thay thế quan hệ ID. Câu hỏi lưu trong JSONB, không có bảng `questions` riêng.
 - Học liệu có thể nằm ở toàn đề, phần, nhóm, câu hoặc khối bài học. `content_media_keys()` trong 004 gom các `media_keys` lồng nhau cho backend; SQL giữ `root_media_keys` trong layout phiên bản để phân biệt học liệu chung toàn đề với tập key tổng hợp. Client không được tự coi tập key tổng hợp là học liệu chung.
@@ -235,7 +248,7 @@ flowchart LR
 
 ### Câu trả lời, CSV và chấm điểm
 
-`Question.answers` là đáp án mẫu dạng mảng chuỗi; **`ExamRun.responses` là map `questionId → string`**, kể cả với câu nhiều lựa chọn/nhiều ô. Không thay thẳng giá trị responses bằng mảng JSON nếu chưa đổi toàn bộ UI, demo và SQL.
+`Question.answers` là đáp án mẫu dạng mảng chuỗi; **`ExamRun.responses` và `PracticeRun.responses` là map `questionId → string`**, kể cả với câu nhiều lựa chọn/nhiều ô. Không thay thẳng giá trị responses bằng mảng JSON nếu chưa đổi toàn bộ UI, demo và SQL.
 
 | Dạng | `Question.answers` ví dụ | Chuỗi lưu trong `responses[questionId]` |
 | --- | --- | --- |
@@ -244,7 +257,7 @@ flowchart LR
 | `short` | `["hanoi","ha noi"]` (cách viết thay thế) | Văn bản người dùng nhập. |
 | `gaps` | `["hanoi\|ha noi","blue"]` (đáp án từng ô) | `JSON.stringify(["Hanoi","blue"])` |
 | `matching` | `["2","1"]` (lựa chọn từ 1) | `JSON.stringify(["2","1"])` |
-| `essay` | `[]` hoặc không có | Văn bản tự luận; điểm null khi chờ quản trị. |
+| `essay` | `[]` hoặc không có | Văn bản tự luận; đề thi chờ quản trị chấm, luyện tập bài học tự đối chiếu (không tính tỷ lệ đúng). |
 
 Header CSV câu hỏi hiện tại:
 
@@ -263,8 +276,8 @@ Chấm thật: `submit_exam → score_question_v4 → answer_equal_v4` trong 004
 | Đăng nhập | `Login → loginIdentity → Supabase Auth → loadProfile`. Kiểm tra `is_active` và `must_change_password` ở cả giao diện, SQL và Worker. Profile `role` từ database quyết định quyền. |
 | Cấp/reset tài khoản | `MembersAdmin → workerJSON → /admin/users`, `/admin/users/reset`, `/admin/users/status`. Worker dùng Auth Admin API; thành viên phải đổi mật khẩu tạm. |
 | Đổi mật khẩu | `Account → /account/password`; Worker xác minh mật khẩu hiện tại rồi cập nhật Auth và bỏ cờ `must_change_password`. Đổi tên đi qua RPC `update_my_profile`. |
-| Lưu bài học | `LessonEditor → saveLesson → save_lesson` (004), ghi bài và từ vựng trong một giao dịch, kiểm tra blocks và key file; demo dùng `demoLesson`. |
-| Lưu đề | `ExamEditor → saveExam → save_exam` (004), kiểm tra version chống ghi đè từ tab khác, tạo version mới; admin tải đầy đủ qua `get_exam_document`. Nháp cho nội dung chưa hoàn thiện, xuất bản kiểm tra nghiêm hơn. |
+| Lưu bài học | `LessonEditor → saveLessonBundle → save_lesson_bundle` (006), gọi `save_lesson` (004) rồi lưu practice trong cùng giao dịch. Demo dùng `demoLessonBundle`; version practice chống ghi đè. |
+| Lưu đề | `ExamEditor → saveExam → save_exam` (wrapper 006 gọi implementation 004), kiểm tra version chống ghi đè từ tab khác, tạo version mới; admin tải đầy đủ qua `get_exam_document`. Nháp cho nội dung chưa hoàn thiện, xuất bản kiểm tra nghiêm hơn. |
 | Bắt đầu / tiếp tục | `App.openExam → startExam/getRun → start_exam/get_exam_run`. Mỗi user chỉ có một lượt `in_progress` cho cùng exam; lượt mới chụp snapshot. `practice` có deadline null; `mock` có hạn toàn đề. |
 | Autosave / nộp | `ExamPlayer` debounce 600 ms, nối hàng đợi Promise, gửi `revision`; server khóa hàng và tăng revision. Khi nộp, đợi hàng đợi trước rồi gọi `submit_exam`. Sau hạn chỉ chấm câu đã lưu trước hạn. Đồng hồ UI dùng `server_now`, không quyết định thời hạn server. |
 | Trả dữ liệu lượt làm | `run_payload` (004) bỏ answers/explanation/rubric và transcript nhóm khi đang làm; khi kết thúc vẫn bỏ rubric với thành viên. Cần giữ quy tắc này cho mọi loại câu hoặc field nhạy cảm mới. |
@@ -280,6 +293,9 @@ Worker còn có `GET /health`: chỉ báo tiến trình đáp ứng, **không ki
 | Key localStorage | Nơi quản lý / mục đích |
 | --- | --- |
 | `linguanest_workspace_v2` | `demo.ts`: nội dung demo và tài liệu đề. Seed chỉ được dùng khi chưa có kho này. |
+| `linguanest_study_starts_v1` | `demo.ts`: thời điểm bắt đầu đọc từng bài; không cộng XP. Demo vẫn một hồ sơ dùng chung localStorage trên trình duyệt. |
+| `linguanest_practice_runs_v1` | `demo.ts`: snapshot, câu trả lời, checks và kết quả luyện tập bài học. |
+| `ln-practice-${run.id}` | `PracticePlayer`: dự phòng responses/revision cho cả demo/cloud; chỉ khôi phục khi revision khớp. |
 | `linguanest_runs_v2` | `demo.ts`: lượt làm/snapshot demo. |
 | `linguanest_profile_v2` | `demo.ts`: hồ sơ demo, mặc định admin. |
 | `linguanest_demo_content_v1`, `linguanest_demo_progress_v1`, `linguanest_demo_attempts_v1` | Nội dung cũ được chuyển khi khởi tạo; tiến độ và XP cũ vẫn được đọc. |
@@ -295,6 +311,8 @@ Xóa localStorage có thể mất bản nháp/bài làm chưa đồng bộ; khô
 
 | Yêu cầu | Đọc/sửa trước | Phần phải đối chiếu thêm |
 | --- | --- | --- |
+| Màu trạng thái / điểm dưới bài học / lịch sử thi | `StudyBadge.tsx`, `App.tsx`, `LessonPractice.tsx`, `LegacyPracticeHistory.tsx`, `practice.css` | `beginLesson`, `summary`, `examHistory`, `lessonExamHistory`, demo equivalents và SQL 007; snapshot/điểm gần nhất, riêng từng user. |
+| Luyện tập bài học / trình soạn | `LessonEditor`, `PracticeEditor`, `LessonPractice`, `PracticePlayer`, `PracticeQuestion`, `practice.css` | `practice.ts`, `api.ts`, `demo.ts`, types, migration 006; giữ snapshot, attempts, revision và quyền mở đáp án. |
 | Màn hình, menu, lọc đề, dashboard | `App.tsx`, `styles.css`, `platform.css` | `api.ts` nếu cần dữ liệu mới; responsive và UI tests. |
 | Thêm loại khối bài học | `types.ts`, `LessonBlocks.tsx`, `authoring.ts` | `LessonEditor`, SQL validation `save_lesson`, media keys, tương thích dữ liệu cũ. |
 | Thêm/sửa dạng câu hỏi | `Question` trong `types.ts`, `QuestionFields`, `QuestionBody` | `content.ts` + CSV, `authoring.ts` chấm demo, SQL `validate_question_v4`/`score_question_v4`/`run_payload`, player, chấm tự luận và tests. |
@@ -314,7 +332,7 @@ Xóa localStorage có thể mất bản nháp/bài làm chưa đồng bộ; khô
 
 1. Đọc bản đồ này, rồi mở đúng file/hàm và test liên quan để xác nhận trạng thái hiện tại. Mã nguồn là căn cứ cuối cùng nếu README chưa kịp cập nhật. Dùng `rg` theo tên component/RPC để tìm đủ nơi gọi.
 2. Phân biệt thay đổi hiển thị với thay đổi hợp đồng dữ liệu/nghiệp vụ. Với nghiệp vụ, rà cả **UI → api.ts → demo.ts hoặc SQL/Worker**; với field mới, rà schema/types, tạo/sửa/đọc/snapshot và quyền hiển thị.
-3. Với database đã triển khai, thêm migration tiến tới thay vì chỉ sửa file đã chạy. Số kế tiếp hiện là **006**; không tái sử dụng 005 dù R2 bỏ qua nó. Cập nhật danh sách migration chạy trong `tests/database.test.mjs` và hướng dẫn cài mới/nâng cấp. Không chạy lại `tools/upgrade-authoring.py` như một bước build.
+3. Với database đã triển khai, thêm migration tiến tới thay vì chỉ sửa file đã chạy. Số kế tiếp hiện là **008**; không tái sử dụng 005 dù R2 bỏ qua nó. Cập nhật danh sách migration chạy trong `tests/database.test.mjs` và hướng dẫn cài mới/nâng cấp. Không chạy lại `tools/upgrade-authoring.py` như một bước build.
 4. Giữ snapshot/lịch sử và khả năng đọc nội dung cũ; không tự xóa file hay bảng cũ. Khi thêm field đáp án/transcript/rubric, kiểm tra payload thành viên thực nhận ở server.
 5. Chạy kiểm tra theo phạm vi bên dưới; chỉ chỉnh README thì đối chiếu đường dẫn, tên hàm, script và quy trình, không cần chạy lại toàn bộ UI/build.
 6. Sau khi hoàn thành, cập nhật mapping, hợp đồng, migration và lệnh kiểm tra trong README nếu đã đổi. Báo rõ đã kiểm tra local hay dịch vụ thật; không ghi trạng thái triển khai dựa vào mã nguồn.
@@ -326,10 +344,11 @@ Các lệnh chạy ở gốc `linguanest/`, trừ dòng Worker. Windows có th�
 | Thay đổi | Kiểm tra phù hợp | Phạm vi thực tế |
 | --- | --- | --- |
 | TypeScript/frontend | `npm run check`, `npm run build` | Type check và bundle production; không xác minh RLS hay dịch vụ thật. |
+| Luyện tập Demo/Cloud | `node --test tests/practice.test.mjs tests/database.test.mjs` | JS grading, nâng cấp demo, snapshot/XP, RPC adapter mock, transaction/RLS/chấm thật bằng PGlite. |
 | CSV/chuẩn hóa câu trả lời | `node --test tests/content.test.mjs` | Parser, lỗi dòng, đáp án nhiều ô, định danh đăng nhập. |
-| SQL/schema/RLS/chấm điểm | `node --test tests/database.test.mjs` | PGlite áp dụng 001–004, Auth giả lập, quyền member/admin, revisions, snapshot, deadline, XP, media; 005 chỉ chạy ở test legacy riêng. |
+| SQL/schema/RLS/chấm điểm | `node --test tests/database.test.mjs` | PGlite áp dụng 001–004, 006–007, Auth giả lập, quyền member/admin, revisions, snapshot, deadline, XP, media; 005 chỉ chạy ở test legacy riêng. |
 | Worker/R2/tài khoản | `node --test tests/worker.test.mjs`; `npm --prefix media-worker run check` | Supabase fetch và binding R2 giả lập; ticket, quyền, upload bù lỗi, xóa thử lại, Range/HEAD/404/416, mật khẩu. Không xác nhận bucket/secret thực. |
-| Soạn bài/đề, player, responsive | `npm run test:ui` | `tests/ui/platform.spec.ts`: CRUD, resume, chấm, lịch sử, nháp, CSV; `structured.spec.ts`: khung 200 câu, nhóm câu, công thức, điền ô và kết quả. |
+| Soạn bài/đề, player, responsive | `npm run test:ui` | `tests/ui/platform.spec.ts`: CRUD, resume, chấm, lịch sử, nháp, CSV; `structured.spec.ts`: khung 200 câu, nhóm câu, công thức, điền ô và kết quả; `practice.spec.ts`: soạn/nhân bản/xóa/đổi thứ tự, preview, Enter, gợi ý, phản hồi, tiếp tục/làm lại, responsive, bài không có câu và cảnh báo chưa lưu. |
 | Seed demo | `npm run validate:data` | ID/quan hệ/câu hỏi dữ liệu mẫu cũ. |
 | Thay đổi nhiều lớp | `npm test` + build frontend + check Worker; thêm UI tests nếu ảnh hưởng luồng người dùng | `npm test` chỉ chạy `tests/*.test.mjs`, không bao gồm Playwright. |
 
@@ -354,7 +373,7 @@ Kết quả kiểm tra ngày 24/10/2026: build thành công; luồng `author gro
 
 ## Soạn bài học lý thuyết và đề có cấu trúc
 
-- **Bài học:** tạo bài → chọn loại nội dung → Thêm nội dung. Mỗi khối có tên để tạo mục lục, đổi thứ tự bằng nút lên/xuống. Văn bản hỗ trợ thanh công cụ in đậm/nghiêng/tiêu đề/danh sách; bản soạn dùng ký hiệu nhẹ, bản học được định dạng bằng React, không thực thi HTML. Khối công thức, bảng có ô sửa trực tiếp, ví dụ/bản dịch, lưu ý, media/transcript và bài tập nhanh. Bài tập nhanh cho tự kiểm tra, không tính điểm thi.
+- **Bài học:** tạo bài → chọn loại nội dung → Thêm nội dung. Mỗi khối có tên để tạo mục lục, đổi thứ tự bằng nút lên/xuống. Văn bản hỗ trợ thanh công cụ in đậm/nghiêng/tiêu đề/danh sách; bản soạn dùng ký hiệu nhẹ, bản học được định dạng bằng React, không thực thi HTML. Khối công thức, bảng có ô sửa trực tiếp, ví dụ/bản dịch, lưu ý, media/transcript và bài tập nhanh. Bài tập nhanh trong khối cũ vẫn hoạt động; bộ luyện tập có lưu kết quả được soạn ở tab Bài tập luyện tập riêng.
 - **Đề:** Thông tin đề → chọn mẫu → Tạo cấu trúc từ mẫu. Nhãn IELTS/TOEIC tự chọn khi ngôn ngữ có loại tương ứng. Nút này thay nội dung hiện tại sau xác nhận. Mẫu TOEIC tạo đủ 200 câu trống; Part 7 cần chia nhóm đúng theo đoạn đọc. IELTS Reading tạo 40 câu trống chia 3 nhóm; Listening 4 nhóm ×10 câu; Writing 2 task. Các dạng câu thực tế do bạn chọn lại theo tài liệu.
 - Chọn phần/nhóm để nhập hướng dẫn, đoạn đọc, audio/ảnh và transcript. Chọn số câu để sửa một câu; tìm số/nội dung, lọc lỗi, thêm trước/sau, nhân bản và chuyển nhóm. Nút lên/xuống đổi thứ tự. Lưu bản nháp giữ nội dung chưa hoàn thiện; xuất bản kiểm tra toàn đề, bấm lỗi để mở đúng câu.
 - **Học liệu:** tải file ngay trong khối/phần/nhóm/câu hoặc chọn lại trong thư viện. Giữ audio ở cấp phần nếu một file chung cả phần; ở cấp nhóm nếu một hội thoại cho nhiều câu. Cấp câu dành cho ảnh/audio riêng. Gắn nhãn sơ đồ: dùng ảnh có số và câu điền/nối tương ứng; chưa có công cụ kéo thả nhãn trực tiếp lên ảnh.
@@ -363,3 +382,62 @@ Kết quả kiểm tra ngày 24/10/2026: build thành công; luồng `author gro
 - **CSV:** `kind` nhận choice/multi/short/gaps/matching/essay. `choices` và `slots` ngăn bởi `|`. Với choice/multi, `answers` là chỉ số từ 0 ngăn bởi `|`; short là các cách viết chấp nhận ngăn bởi `|`. Với gaps/matching, `answers` ngăn bởi `;` theo từng mục; matching dùng chỉ số từ 1. `word_limit` là số từ tối đa mỗi ô, 0 là không giới hạn. Dùng mẫu CSV trong giao diện; ảnh/audio gắn sau nhập.
 - **Làm bài:** trên desktop, học liệu nằm phía trên nhóm câu, cả hai dùng toàn bộ chiều rộng cột nội dung; học liệu ghim dưới thanh thời gian khi cuộn trang, gồm cả file chung toàn đề. Khung giới hạn chiều cao theo màn hình và cuộn bên trong khi nội dung dài, chừa chỗ cho câu hỏi. Khi chuyển câu, khoảng cuộn tính cả chiều cao khung học liệu để tránh che câu đang chọn. Danh sách số câu vẫn ở cột điều hướng bên trái khi đủ rộng; bấm số câu để tới câu cần làm. Điện thoại chuyển tab Học liệu/Câu hỏi. Audio giữ nguyên khi chuyển câu trong cùng nhóm hoặc ẩn tab học liệu. Có đánh dấu xem lại (lưu trên thiết bị) và lọc câu. Đáp án tự đồng bộ lên máy chủ; luyện tập không hết giờ, thi thử có đồng hồ toàn đề.
 - **Lưu ý nâng cấp:** triển khai frontend/Worker sau khi chạy migrations. Bản demo vẫn lưu riêng trên trình duyệt; không tự đưa nội dung demo lên server. Thử upload MP3, tua, tải PDF và hai tài khoản thật trên project của bạn trước khi chia sẻ.
+
+
+## Luyện tập ngay trong bài học (migration 006)
+
+### Cách soạn và học
+
+1. **Quản trị → Bài học → Tạo bài học / Sửa → Nội dung bài học**: nhập lý thuyết, khối nội dung, từ vựng và trạng thái.
+2. Sang **Bài tập luyện tập → + Thêm câu hỏi**. Chọn dạng, nhập câu và đáp án; dùng các nút Nhân bản / Chuyển lên / Chuyển xuống / Xóa có xác nhận. Trắc nghiệm thêm phương án bằng nút và chọn đáp án đúng bằng radio/checkbox. Một ô trống dùng `{{blank}}` hoặc `___`; nhiều ô dùng `{{1}}`, `{{2}}` với đáp án từng mục. Các đáp án thay thế chỉ được chấp nhận khi người soạn khai báo.
+3. Gợi ý, giải thích, số lần thử (1–10, mặc định 2), chế độ mở đáp án và kiểm tra ngay khi chọn (trắc nghiệm một đáp án) được cấu hình trong form. Preview tương tác cập nhật khi sửa. CSV vẫn thêm hàng loạt được; các field mới như hint/max_attempts/check_mode chỉnh trong form, chưa nhập qua CSV.
+4. Bấm **Lưu nội dung / Lưu và xuất bản**. Bài học, từ vựng và luyện tập lưu cùng một giao dịch trong Cloud. Dù bài nháp, câu luyện tập đã thêm phải có nội dung/đáp án hợp lệ trước khi lưu máy chủ; bản soạn dở vẫn được lưu trên thiết bị. Có cảnh báo khi rời trang còn thay đổi chưa lưu.
+5. Học viên mở bài học, đọc lý thuyết, bấm **Bắt đầu luyện tập** ở cuối bài để mở **màn hình luyện tập riêng** (cùng tab trình duyệt). Màn hình này không hiển thị lý thuyết phía trên; bắt đầu, tiếp tục, xem kết quả và làm lại đều dùng màn hình riêng. Nút **Quay về bài học** trả về đúng bài gốc, tải lại lịch sử; câu trả lời được lưu trước khi quay về. Chọn/nhập rồi Kiểm tra (hoặc Enter với ô nhập). Có tiến độ, số câu, trước/sau; đổi câu giữ câu trả lời. Tự lưu sau 600 ms và khi quay về bài; lỗi lưu/xung đột hiện thông báo để tải lại trạng thái.
+6. **Hoàn thành luyện tập** chấm các câu còn lại, hiện số câu đúng, tỷ lệ, điểm, phần cần ôn; có Luyện tập lại / Quay về bài học. Lịch sử nằm ngay trong bài học; lượt đang làm được tiếp tục thay vì tạo trùng. Bài chưa có câu hoặc bị tắt luyện tập không hiện nút bắt đầu vô dụng.
+
+### Quy tắc dữ liệu, kiểm tra và điểm
+
+- `PracticeDocument` chứa `lesson_id, version, questions, layout?, media_keys, enabled, source_exam_id?`. Mỗi bài tối đa 200 câu, tài liệu tối đa 2 MB; ID câu không trùng. Layout/phần/nhóm từ đề cũ được giữ để học liệu nghe/đọc không mất ngữ cảnh.
+- `Question` bổ sung `title?`, `hint?`, `max_attempts?`, `reveal_mode?` (`after_attempts`/`after_check`), `check_mode?` (`manual`/`instant`). Trắc nghiệm một/nhiều, điền một/nhiều ô, nối dùng chung chuẩn đáp án của đề thi.
+- `PracticeRun.checks[questionId]` lưu `tries, response, correct, score, locked, revealed, slot_correct?`. Sai khi còn lượt được sửa; đúng/hết lượt/after_check sẽ khóa câu và mở đáp án, giải thích. Chọn Xem đáp án khóa câu và cho 0 điểm. Nộp chốt mọi câu. Câu đã khóa không thể thay đáp án bằng API; snapshot và revision giữ kết quả cũ khi admin sửa bộ câu.
+- Cloud dùng `check_practice_answer → practice_check → score_question_v4`; demo/preview dùng `checkPractice → scoreQuestion`. Chuẩn hóa NFC/hoa thường/khoảng trắng như đề thi, không tự suy diễn từ đồng nghĩa. Mỗi ô có feedback riêng; điểm nhiều ô chia đều, tổng điểm phải chia hết số ô.
+- `practice_payload` không gửi answers/explanation trước khi câu khóa; transcript nhóm chỉ mở sau khi kết thúc cả lượt, rubric không gửi cho học viên. Summary không có đáp án. Tables bật RLS và thu hồi mọi quyền trực tiếp của anon/authenticated; RPC quản trị kiểm tra admin, RPC lượt làm chỉ cho chủ lượt đang active và đã đổi mật khẩu tạm.
+- Luyện tập không cộng XP mới. 20 XP hoàn thành lý thuyết và XP thi/lịch sử cũ giữ nguyên. Tự luận được bảo toàn và cho tự đối chiếu bài mẫu, không chấm đúng/sai, không tính vào mẫu số tỷ lệ chính xác; tự luận thi chứng chỉ vẫn qua quản trị chấm như cũ.
+- Media vẫn qua Worker/R2. RPC quyền đọc/xóa mở rộng cho tài liệu practice và snapshot; file lịch sử còn dùng không thể xóa. Không cần biến môi trường hay Worker route mới.
+
+### Chuyển bài ôn cũ an toàn
+
+Chạy `006_lesson_practice.sql` trong SQL Editor sau 004 (005 chỉ dành cho Storage cũ). Migration tạo bảng/RPC, sao chép đề loại **Bài tập** đã gắn `lesson_id` vào practice, giữ nguyên đề nguồn, versions, lượt làm, đáp án và XP cũ. `ON CONFLICT DO NOTHING` cùng khóa duy nhất lesson/source giúp chạy lại không nhân bản hay ghi đè nội dung đã chỉnh. Demo thực hiện chuyển tương đương qua `upgradePractice` trong `linguanest_workspace_v2` và cờ `practice_migration`.
+
+Bài tập cũ chưa gắn bài học không tự đoán nơi chuyển: vào bài học → tab Bài tập luyện tập → **Chuyển bài ôn tập cũ vào bài học → Đưa vào bản soạn → Lưu**. Chỉ các bài cùng ngôn ngữ và chưa chuyển mới được chọn; bản nguồn vẫn giữ nguyên. Mỗi practice có một nguồn chuyển đổi; cần chọn bài học khác nếu đã có nguồn. Bản sao bài học tạo ID câu mới và bỏ liên kết nguồn.
+
+`learningExam()` lọc loại Bài tập và nguồn đã chuyển ra khỏi danh sách Đề thi học viên/quản trị. Đề chứng chỉ hoặc bài kiểm tra tổng hợp giữ hệ thống thi riêng. Mẫu Tùy chỉnh là khung bài kiểm tra tổng hợp, không tự gán loại Bài tập. Đề nguồn đã chuyển không được bắt đầu/sửa mới qua RPC; lượt bài tập cũ vẫn mở, tiếp tục/nộp và xem trong mục Bài học qua Lịch sử bài tập cũ (007). Nội dung practice đã sửa không ghi ngược lên đề nguồn.
+
+Sau migration, triển khai frontend mới. Không cần chạy lại seed, xóa localStorage hoặc chuyển file R2. Kiểm thử local không tự áp dụng SQL vào project Supabase thật. Nếu UI báo thiếu RPC `list_lesson_practices`, kiểm tra đã chạy 006 trên đúng project chưa.
+
+
+Kiểm chứng bản nâng cấp bài học ngày 24/10/2026: `npm run check`, `npm run build`, `npm run validate:data`, `npm --prefix media-worker run check` đạt; `npm test` đạt **35/35**; bộ UI đầy đủ đạt **12/12** trên Edge desktop và mobile giả lập. Đã xem ảnh câu điền/trắc nghiệm và kiểm tra không tràn ngang, hai cột desktop/một cột mobile. Sau rà soát nhập liệu và CSS, chạy lại UI luyện tập (4/4) và build. Ô nhập lớn được kiểm tra chiều cao tối thiểu 64 px; selector được ưu tiên trên CSS form chung và khung media rỗng không chiếm khoảng trống. Repository chưa có script/config lint riêng; không ghi nhận lint là đã chạy. Cloud được kiểm tra bằng RPC adapter mock và PostgreSQL/PGlite với Auth giả lập; R2 dùng mock. Chưa áp dụng migration, deploy hay kiểm tra session/upload trên Supabase/R2 thật.
+
+
+Cập nhật điều hướng luyện tập: `App.tsx` thêm Page `practice` và state `practiceRun`; `LessonPractice` chỉ chứa khu vực bắt đầu/lịch sử và tải lượt làm qua API rồi gọi `onOpen`. `PracticePlayer` render độc lập trong vùng nội dung, vẫn giữ sidebar và chọn mục Bài học. Đổi màn hình đặt lại vị trí cuộn; rời bằng menu hoặc đổi tài khoản xóa state màn hình, không xóa lượt đã lưu. Không đổi schema/API/R2 và không thêm router/URL mới (ứng dụng vẫn điều hướng bằng state). Kiểm tra bằng build và `tests/ui/practice.spec.ts` trên desktop/mobile: không còn lý thuyết trong màn hình luyện tập, quay về đúng bài, tiếp tục/làm lại và mở kết quả từ lịch sử.
+
+Kết quả kiểm tra điều hướng riêng: `npm run build` đạt; `npm run test:ui -- tests/ui/practice.spec.ts` đạt **4/4** trên desktop/mobile. Đã xem ảnh màn hình luyện tập độc lập để xác nhận phần lý thuyết không còn nằm phía trên.
+
+
+## Trạng thái học cá nhân và lịch sử đề thi (migration 007)
+
+- **Chưa học:** ô trung tính khi chưa mở/hoàn thành bài và chưa có lượt luyện tập.
+- **Đang học:** ô vàng sau khi mở lý thuyết hoặc đang làm bài nhưng chưa hoàn thành luyện tập. Bấm hoàn thành lý thuyết vẫn vàng nếu bài có bộ luyện tập đang mở; bài chỉ có lý thuyết chuyển xanh khi bấm hoàn thành.
+- **Đã hoàn thành luyện tập:** ô xanh kèm **điểm lần hoàn thành gần nhất**, kể cả 0 điểm (xanh chỉ biểu thị đã làm, không khẳng định đạt/đúng hết). Khi đang làm lại, giữ điểm cũ và thêm nhãn Đang luyện tập lại. Điểm/tổng điểm lấy từ snapshot lượt đã hoàn thành, không lấy bộ câu hiện tại của admin. Tự luận practice không có điểm tự chấm hiển thị Đã tự đối chiếu.
+- Nhãn hiện ở danh sách bài, đầu bài học và khu vực bắt đầu luyện tập. Lịch sử luyện tập trong bài hiện thêm điểm từng lượt. `PracticePlayer.onComplete` làm mới summary; mở bài và bắt đầu/tiếp tục luyện tập cũng tải lại summary. `App.refreshStats` bỏ response cũ hoặc của tài khoản đã rời để tránh ghi đè trạng thái mới.
+- **Tiến độ & lịch sử đề thi** chỉ hiển thị lượt thi chuyên dụng/bài kiểm tra tổng hợp, số đề đã nộp và XP từ thi. Tổng XP toàn bộ vẫn giữ ở thanh trên và Tổng quan; không viết lại XP cũ. `exam_history` lọc bài tập cũ **trước LIMIT/OFFSET**, nên trang không bị rỗng giả do lọc phía client.
+- Lượt bài tập cũ kiểu Bài tập hoặc nguồn đã chuyển được đọc qua `lesson_exam_history`: hiện tại bài học tương ứng. Nếu chưa gắn bài, hiện ở cuối danh sách Bài học trong khu vực Bài tập cũ chưa gắn bài học. Vẫn xem/tiếp tục bằng ExamPlayer; quay lại đúng bài/danh sách thay vì lịch sử thi. Không xóa bản ghi, không mất điểm cũ, không chặn chấm tự luận cũ.
+
+**Database:** chạy `007_study_status.sql` sau 006, có thể chạy lại. Thêm `lesson_study_starts` khóa `(user_id, lesson_id)`, chỉ ghi lần đầu bằng `begin_lesson(p_id)`; danh tính người học lấy từ `auth.uid()` trên server. Bảng bật RLS và không cấp đọc/ghi trực tiếp cho frontend. View nội bộ `lesson_exercise_sources` ánh xạ bài tập cũ sang bài học, không cấp quyền frontend. RPC `lesson_study_status` tổng hợp lượt practice, lượt bài tập cũ và hoàn thành lý thuyết của đúng người gọi; không trả đáp án. `learning_summary` giữ mọi field cũ và thêm `lesson_status`, `dedicated_exam_count`, `exam_xp`. Các RPC trạng thái/lịch sử kiểm tra active/password gate; không nhận user ID do client tự chọn. Chỉ đọc bài không cấp XP và không tự đánh dấu hoàn thành.
+
+**Demo:** `demoBeginLesson`, `demoStudyStatus`, `demoExamHistory`, `demoLessonExamHistory` mô phỏng cùng cách tính/lọc; không chuyển demo thành hệ thống nhiều tài khoản. Cloud lưu riêng theo tài khoản Supabase và đồng bộ giữa các thiết bị khi tải lại dữ liệu.
+
+**Kiểm tra thay đổi:** `tests/database.test.mjs` có kiểm tra hai tài khoản không thấy tiến độ nhau, ghi bắt đầu không cấp XP, lặp không trùng, điểm 0/lần gần nhất và giữ snapshot, nâng cấp lặp lại, lọc trước phân trang và bảo toàn lịch sử bài tập cũ. `tests/practice.test.mjs` kiểm tra Demo, màu trạng thái và RPC adapter. UI desktop/mobile kiểm tra vàng khi đọc, xanh/điểm khi làm xong, điểm vẫn còn lúc làm lại, bài lý thuyết không có câu và lịch sử thi riêng. Thay đổi này không cần cấu hình Worker/R2 mới; chưa áp dụng migration vào Supabase thật.
+
+
+Kiểm chứng phần trạng thái học và lịch sử ngày 24/10/2026: `npm run check` đạt; `npm test` đạt **39/39**; bộ UI đầy đủ đạt **12/12**. Sau khi bổ sung kiểm tra lịch sử bài tập cũ, chỉnh màu chữ trạng thái và nhãn quay về bài học, chạy lại `npm run test:ui -- tests/ui/practice.spec.ts` đạt **6/6** trên desktop/mobile, cùng `npm run build` đạt. Đã xem ảnh danh sách bài học và kiểm tra không tràn ngang trên mobile. Bộ test hiện có 14 trường hợp UI; chưa chạy lại toàn bộ 14 trong một lượt. Các test mới xác nhận đọc bài không tự cộng XP, phân tách tài khoản, điểm 0 và điểm gần nhất khi làm lại, lọc trước phân trang, migration 007 chạy lại an toàn, lịch sử bài tập cũ vẫn mở được và quay về đúng nơi. Chưa áp dụng 007 trên Supabase thật; cần chạy migration này trước khi triển khai frontend mới. Không có cấu hình lint riêng trong repository.
