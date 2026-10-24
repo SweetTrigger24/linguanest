@@ -22,6 +22,50 @@ async function backend<T>(env: Env, path: string, init: RequestInit = {}, token?
   }
   return data as T
 }
+// Ignore malformed/multipart ranges; return null for an unsatisfiable single range.
+function byteRange(value: string, size: number): { offset: number; length: number } | null | undefined {
+  const match = /^bytes=(\d*)-(\d*)$/i.exec(value.trim())
+  if (!match || (!match[1] && !match[2])) return undefined
+  if (!size) return null
+  if (!match[1]) {
+    const length = Math.min(Number(match[2]), size)
+    return length ? { offset: size - length, length } : null
+  }
+  const offset = Number(match[1]), end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1
+  if (offset >= size || end < offset) return null
+  return { offset, length: end - offset + 1 }
+}
+async function readMedia(request: Request, env: Env, key: string): Promise<Response> {
+  let range: { offset: number; length: number } | undefined
+  const requestedRange = request.method === 'GET' ? request.headers.get('Range') : null
+  if (requestedRange) {
+    const info = await env.MEDIA_BUCKET.head(key)
+    if (!info) throw new HttpError('Không tìm thấy file.', 404)
+    const ifRange = request.headers.get('If-Range')
+    if (!ifRange || ifRange === info.httpEtag || ifRange === info.uploaded.toUTCString()) {
+      const parsed = byteRange(requestedRange, info.size)
+      if (parsed === null) return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${info.size}`, 'Accept-Ranges': 'bytes' } })
+      range = parsed
+    }
+  }
+  let object: R2Object | null, body: ReadableStream | null = null
+  if (request.method === 'HEAD') object = await env.MEDIA_BUCKET.head(key)
+  else {
+    const result = await env.MEDIA_BUCKET.get(key, range ? { range } : undefined)
+    object = result
+    body = result?.body ?? null
+  }
+  if (!object) throw new HttpError('Không tìm thấy file.', 404)
+  const headers = new Headers()
+  object.writeHttpMetadata(headers)
+  headers.set('ETag', object.httpEtag)
+  headers.set('Last-Modified', object.uploaded.toUTCString())
+  headers.set('Accept-Ranges', 'bytes')
+  headers.set('Content-Length', String(range ? range.length : object.size))
+  headers.set('Content-Disposition', key.endsWith('.pdf') ? 'attachment; filename="document.pdf"' : 'inline')
+  if (range) headers.set('Content-Range', `bytes ${range.offset}-${range.offset + range.length - 1}/${object.size}`)
+  return new Response(body, { status: range ? 206 : 200, headers })
+}
 const post = (value: unknown, method = 'POST'): RequestInit => ({ method, body: JSON.stringify(value) })
 const rpc = <T,>(env: Env, name: string, value: unknown) => backend<T>(env, `/rest/v1/rpc/${name}`, post(value))
 async function profile(env: Env, id: string) {
@@ -120,16 +164,7 @@ async function route(request: Request, env: Env): Promise<Response> {
   }
   if (mediaKey && ['GET', 'HEAD'].includes(request.method)) {
     if (!await rpc<boolean>(env, 'can_access_media_for', { p_user: user.id, p_key: mediaKey })) throw new HttpError('Bạn không có quyền đọc file này.', 403)
-    const obj = request.method === 'HEAD' ? await env.MEDIA_BUCKET.head(mediaKey) : await env.MEDIA_BUCKET.get(mediaKey, { range: request.headers })
-    if (!obj) throw new HttpError('Không tìm thấy file.', 404)
-    const headers = new Headers(); obj.writeHttpMetadata(headers); headers.set('Accept-Ranges', 'bytes'); headers.set('ETag', obj.httpEtag)
-    headers.set('Content-Length', String(obj.size)); headers.set('Content-Disposition', obj.httpMetadata?.contentType === 'application/pdf' ? 'attachment; filename="document.pdf"' : 'inline')
-    let status = 200
-    if (obj.range && 'offset' in obj.range && obj.range.offset !== undefined && obj.range.length !== undefined) {
-      headers.set('Content-Range', `bytes ${obj.range.offset}-${obj.range.offset + obj.range.length - 1}/${obj.size}`)
-      headers.set('Content-Length', String(obj.range.length)); status = 206
-    }
-    return new Response('body' in obj ? (obj as R2ObjectBody).body : null, { status, headers })
+    return readMedia(request, env, mediaKey)
   }
   if (url.pathname === '/media' && request.method === 'POST') {
     if (me.role !== 'admin') throw new HttpError('Chỉ quản trị viên được tải học liệu.', 403)
@@ -163,7 +198,7 @@ export default {
     const headers = new Headers(response.headers)
     if (origin) headers.set('Access-Control-Allow-Origin', origin)
     headers.set('Vary', 'Origin'); headers.set('Access-Control-Allow-Methods', 'GET, HEAD, POST, DELETE, OPTIONS')
-    headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, Range'); headers.set('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges')
+    headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, Range, If-Range'); headers.set('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges, ETag')
     headers.set('Cache-Control', 'private, no-store'); headers.set('X-Content-Type-Options', 'nosniff'); headers.set('Referrer-Policy', 'no-referrer')
     return new Response(response.body, { status: response.status, headers })
   },

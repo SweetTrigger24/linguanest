@@ -24,3 +24,8 @@ test('internal login mapping and answer normalization',()=>{
   assert.equal(normalizeAnswer('  HELLO   World\n'),'hello world')
   assert.notEqual(normalizeAnswer('résumé'),normalizeAnswer('resume'))
 })
+
+test('CSV imports per-slot answers and word limits without mixing alternative spellings',()=>{
+  const r=importCSV('kind,prompt,choices,answers,points,slots,word_limit\ngaps,Fill {{1}} {{2}},,hanoi|ha noi;blue,2,City|Color,2\nmatching,Match,A|B,2;1,2,First|Second,0','questions')
+  assert.deepEqual(r.errors,[]);assert.deepEqual(r.items[0].answers,['hanoi|ha noi','blue']);assert.deepEqual(r.items[0].slots,['City','Color']);assert.equal(r.items[0].word_limit,2)
+})

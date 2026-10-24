@@ -25,7 +25,7 @@ test.before(async () => {
     CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULLIF(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     GRANT USAGE ON SCHEMA public,auth TO authenticated,anon,service_role;
     GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated,anon,service_role;`)
-  for (const name of ['001_schema.sql', '002_seed.sql', '003_learning_platform.sql']) {
+  for (const name of ['001_schema.sql', '002_seed.sql', '003_learning_platform.sql', '004_structured_content.sql']) {
     let sql = await fs.readFile(new URL('../supabase/' + name, import.meta.url), 'utf8')
     // PGlite uses PostgreSQL's built-in gen_random_uuid; pgcrypto is not installed here.
     sql = sql.replace('CREATE EXTENSION IF NOT EXISTS pgcrypto;', '')
@@ -149,4 +149,65 @@ test('server rejects malformed questions and responses', async () => {
   const id=await rpc(admin,'save_exam',[doc]),r=await rpc(member,'start_exam',[id])
   await assert.rejects(rpc(member,'save_exam_responses',[r.id,{q999:'fake'},0]),/không hợp lệ/)
   await assert.rejects(rpc(member,'save_exam_responses',[r.id,{q1:4},0]),/không hợp lệ/)
+})
+
+test('structured exams protect transcripts and rubrics, grade compound answers, preserve layout and nested media', async () => {
+  const type=(await db.query("SELECT id FROM public.exam_types WHERE name='IELTS' LIMIT 1")).rows[0].id
+  const key=`files/${crypto.randomUUID()}.mp3`
+  await db.query('INSERT INTO public.media_files(key,filename,content_type,size) VALUES($1,$2,$3,100)',[key,'group.mp3','audio/mpeg'])
+  const layout={mode:'practice',sections:[{id:'s1',title:'Listening',instructions:'Listen',media_keys:[]}],groups:[{id:'g1',section_id:'s1',title:'Conversation',passage:'Shared source',transcript:'PRIVATE TRANSCRIPT',media_keys:[key]}]}
+  const questions=[
+    {id:'multi',kind:'multi',group_id:'g1',prompt:'Select two',points:2,choices:['A','B','C'],answers:['0','2']},
+    {id:'gaps',kind:'gaps',group_id:'g1',prompt:'Fill {{1}} and {{2}}',points:4,choices:[],slots:['City','Color'],answers:['ha noi|hanoi','blue'],word_limit:2},
+    {id:'match',kind:'matching',group_id:'g1',prompt:'Match',points:2,choices:['A','B'],slots:['One','Two'],answers:['2','1']},
+    {id:'essay',kind:'essay',group_id:'g1',prompt:'Write',points:5,choices:[],answers:[],explanation:'SAMPLE',rubric:'ADMIN RUBRIC'},
+  ]
+  const doc=exam(type,{layout,questions}),id=await rpc(admin,'save_exam',[doc])
+  const adminDoc=await rpc(admin,'get_exam_document',[id]);assert.equal(adminDoc.layout.groups[0].transcript,'PRIVATE TRANSCRIPT');assert.deepEqual(adminDoc.media_keys,[])
+  let r=await rpc(member,'start_exam',[id]);assert.equal(r.deadline,null);assert.equal(r.layout.groups[0].transcript,undefined);assert.equal(r.questions[3].rubric,undefined);assert.ok(r.media_keys.includes(key))
+  const responses={multi:'["2","0"]',gaps:'["  HA NOI  ","red"]',match:'["2","1"]',essay:'My answer'}
+  r=await rpc(member,'submit_exam',[r.id,responses,0]);assert.equal(r.score,6);assert.equal(r.grades.gaps.score,2);assert.equal(r.status,'pending_review');assert.equal(r.layout.groups[0].transcript,'PRIVATE TRANSCRIPT');assert.equal(r.questions[3].rubric,undefined)
+  assert.equal((await rpc(admin,'get_exam_run',[r.id])).questions[3].rubric,'ADMIN RUBRIC')
+  await rpc(admin,'save_exam',[{...doc,id,version:1,layout:{...layout,groups:[{...layout.groups[0],transcript:'CHANGED',media_keys:[]}]}}])
+  assert.equal((await rpc(member,'get_exam_run',[r.id])).layout.groups[0].transcript,'PRIVATE TRANSCRIPT')
+  await assert.rejects(db.query('SELECT public.reserve_media_delete($1)',[key]),/lịch sử/)
+  for(const [q,value] of [[questions[0],'["0","0"]'],[questions[0],'[0,2]'],[questions[1],'["ha noi extra","red"]'],[questions[2],'not json']])assert.equal((await db.query('SELECT public.score_question_v4($1,$2) AS score',[q,value])).rows[0].score,0)
+  await assert.rejects(rpc(member,'score_question_v4',[questions[0],'["0","2"]']),/permission denied/)
+})
+
+test('drafts save incomplete questions but publishing validates groups, answers and per-item points', async () => {
+  const type=(await db.query("SELECT id FROM public.exam_types WHERE language_code='en' LIMIT 1")).rows[0].id
+  const doc=exam(type,{status:'draft',questions:[{id:'blank',kind:'choice',prompt:'',points:1,choices:['',''],answers:[]}]})
+  const id=await rpc(admin,'save_exam',[doc]);assert.ok(id)
+  await assert.rejects(rpc(admin,'save_exam',[{...doc,id,version:1,status:'published'}]),/Thiếu nội dung/)
+  const bad=exam(type,{questions:[{id:'g',kind:'gaps',prompt:'Fill',points:3,slots:['1','2'],answers:['a','b'],choices:[]}]})
+  await assert.rejects(rpc(admin,'save_exam',[bad]),/không hợp lệ/)
+  await assert.rejects(rpc(admin,'save_exam',[{...doc,layout:{mode:'practice',sections:[],groups:[]}}]),/nhóm/)
+})
+
+test('lesson blocks persist safely and nested media participates in authorization/deletion', async () => {
+  const course=(await db.query('SELECT id FROM public.courses LIMIT 1')).rows[0].id,key=`files/${crypto.randomUUID()}.png`
+  await db.query('INSERT INTO public.media_files(key,filename,content_type,size) VALUES($1,$2,$3,100)',[key,'diagram.png','image/png'])
+  const blocks=[{id:'formula',kind:'formula',title:'Present simple',body:'S + V(s/es)'},{id:'media',kind:'media',title:'Diagram',body:'',media_keys:[key]}]
+  const id=await rpc(admin,'save_lesson',[{id:'',course_id:course,title:'Grammar',status:'published',blocks},[]])
+  const row=(await asUser(member,'SELECT blocks,media_keys FROM public.lessons WHERE id=$1',[id])).rows[0]
+  assert.deepEqual(row.blocks,blocks);assert.ok(row.media_keys.includes(key))
+  assert.equal((await db.query('SELECT public.can_access_media_for($1,$2) ok',[member,key])).rows[0].ok,true)
+  await assert.rejects(db.query('SELECT public.reserve_media_delete($1)',[key]),/bài học/)
+})
+
+test('legacy Storage migration still protects previously used buckets',async()=>{
+  await db.exec(`CREATE SCHEMA storage; CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+    CREATE TABLE storage.objects(id uuid DEFAULT gen_random_uuid(),bucket_id text,name text); ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+    GRANT USAGE ON SCHEMA storage TO anon,authenticated,service_role; GRANT ALL ON storage.objects TO anon,authenticated,service_role;
+    CREATE POLICY broad_existing_policy ON storage.objects FOR ALL TO authenticated USING(true) WITH CHECK(true);`)
+  await db.exec(await fs.readFile(new URL('../supabase/005_private_storage.sql',import.meta.url),'utf8'))
+  await db.query("INSERT INTO storage.objects(bucket_id,name) VALUES('linguanest-media','secret.mp3'),('other','public.png')")
+  assert.equal((await asUser(member,"SELECT * FROM storage.objects WHERE bucket_id='linguanest-media'")).rows.length,0)
+  assert.equal((await asUser(admin,"SELECT * FROM storage.objects WHERE bucket_id='linguanest-media'")).rows.length,0)
+  assert.equal((await asUser(member,"SELECT * FROM storage.objects WHERE bucket_id='other'")).rows.length,1)
+  await assert.rejects(asUser(member,"INSERT INTO storage.objects(bucket_id,name) VALUES('linguanest-media','bad.mp3')"),/row-level security/)
+  await db.exec('SET ROLE service_role')
+  try {assert.equal((await db.query("SELECT * FROM storage.objects WHERE bucket_id='linguanest-media'")).rows.length,1)} finally {await db.exec('RESET ROLE')}
+  assert.equal((await db.query("SELECT public FROM storage.buckets WHERE id='linguanest-media'")).rows[0].public,false)
 })

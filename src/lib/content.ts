@@ -13,9 +13,13 @@ export function validateQuestions(questions: Question[], publish = false): strin
     ids.add(q.id)
     if (!q.prompt.trim()) errors.push(p + 'thiếu nội dung.')
     if (!Number.isInteger(q.points) || q.points < 1 || q.points > 100) errors.push(p + 'điểm phải là số nguyên từ 1–100.')
-    if (!['choice', 'short', 'essay'].includes(q.kind)) errors.push(p + 'loại câu hỏi không hợp lệ.')
+    if (!['choice', 'short', 'essay', 'multi', 'gaps', 'matching'].includes(q.kind)) errors.push(p + 'loại câu hỏi không hợp lệ.')
     if (q.kind === 'choice' && (q.choices.length < 2 || q.choices.length > 8 || q.choices.some(c => !c.trim()) || q.answers?.length !== 1 || !/^\d+$/.test(q.answers[0]) || Number(q.answers[0]) >= q.choices.length)) errors.push(p + 'cần 2–8 lựa chọn và một đáp án đúng.')
     if (q.kind === 'short' && (!q.answers?.length || q.answers.some(a => !a.trim()))) errors.push(p + 'thiếu đáp án được chấp nhận.')
+    if (q.kind === 'multi' && (q.choices.length < 2 || q.choices.length > 8 || q.choices.some(c => !c.trim()) || !q.answers?.length || new Set(q.answers).size !== q.answers.length || q.answers.some(a => !/^\d+$/.test(a) || Number(a) >= q.choices.length))) errors.push(p + 'lựa chọn/đáp án nhiều lựa chọn chưa hợp lệ.')
+    if (['gaps', 'matching'].includes(q.kind) && (!q.slots?.length || q.slots.length > 30 || q.slots.some(s => !s.trim()) || q.answers?.length !== q.slots.length || q.answers.some(a => !a.trim()) || q.points % q.slots.length !== 0)) errors.push(p + 'mỗi mục cần nhãn, đáp án; điểm phải chia hết cho số mục (tối đa 30 mục).')
+    if (q.kind === 'matching' && (!q.choices.length || q.choices.some(c => !c.trim()) || q.answers?.some(a => !/^\d+$/.test(a) || Number(a) < 1 || Number(a) > q.choices.length))) errors.push(p + 'đáp án nối phải là số thứ tự lựa chọn từ 1.')
+    if (q.word_limit !== undefined && (!Number.isInteger(q.word_limit) || q.word_limit < 0 || q.word_limit > 100)) errors.push(p + 'giới hạn từ phải từ 0–100.')
   })
   return errors
 }
@@ -48,7 +52,7 @@ export function importCSV(text: string, kind: 'words' | 'questions'): { items: (
       if (!v.term?.trim() || !v.meaning?.trim()) { errors.push(`Dòng ${i + 2}: thiếu từ hoặc nghĩa.`); return }
       items.push({ id: crypto.randomUUID(), lesson_id: '', term: v.term, meaning: v.meaning, pronunciation: v.pronunciation || '', example: v.example || '', example_translation: v.example_translation || '', sort_order: i })
     } else {
-      const q: Question = { id: crypto.randomUUID(), kind: v.kind as Question['kind'], section: v.section || '', prompt: v.prompt || '', passage: v.passage || '', choices: v.choices ? v.choices.split('|') : [], answers: v.answers ? v.answers.split('|') : [], explanation: v.explanation || '', points: Number(v.points) }
+      const q: Question = { id: crypto.randomUUID(), kind: v.kind as Question['kind'], section: v.section || '', prompt: v.prompt || '', passage: v.passage || '', choices: v.choices ? v.choices.split('|') : [], answers: v.answers ? v.answers.split(['gaps', 'matching'].includes(v.kind) ? ';' : '|') : [], slots: v.slots ? v.slots.split('|') : [], word_limit: Number(v.word_limit || 0), explanation: v.explanation || '', points: Number(v.points) }
       const issues = validateQuestions([q]); errors.push(...issues.map(e => `Dòng ${i + 2}: ${e.replace('Câu 1: ', '')}`)); items.push(q)
     }
   })

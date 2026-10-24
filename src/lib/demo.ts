@@ -1,5 +1,6 @@
+import { scoreQuestion, nestedMedia } from './authoring'
 import seed from '../data/demo.json'
-import { normalizeAnswer, validateQuestions } from './content'
+import { validateQuestions } from './content'
 import type { ContentData, ExamDocument, ExamRun, ExamType, Lesson, Profile, Progress, Summary, Word } from './types'
 
 const read = <T,>(key: string, fallback: T): T => { try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback } catch { return fallback } }
@@ -28,12 +29,12 @@ export function demoLesson(lesson: Lesson, words: Word[]) {
   write(KEY, s); return id
 }
 export function demoExam(doc: ExamDocument) {
-  const errors = validateQuestions(doc.questions, doc.status === 'published'); if (errors.length) throw Error(errors.join('\n'))
+  const errors = doc.status === 'published' ? validateQuestions(doc.questions, true) : []; if (errors.length) throw Error(errors.join('\n'))
   const s = demoStore(), old = s.documents.find(d => d.id === doc.id)
   if (old && old.version !== doc.version) throw Error('Đề đã thay đổi. Hãy tải lại.')
   const saved = { ...doc, id: doc.id || crypto.randomUUID(), version: (old?.version || 0) + 1 }
   s.documents = [...s.documents.filter(d => d.id !== saved.id), saved]
-  s.exams = s.documents.map(({ questions: _questions, ...exam }) => exam); write(KEY, s); return saved.id
+  s.exams = s.documents.map(({ questions: _questions, ...exam }) => ({ ...exam, mode: exam.layout?.mode || 'mock' })); write(KEY, s); return saved.id
 }
 export function demoType(language_code: ExamType['language_code'], name: string) {
   const s = demoStore(); if (s.exam_types.some(t => t.language_code === language_code && t.name === name)) throw Error('Loại kỳ thi đã có.')
@@ -45,29 +46,29 @@ export function demoComplete(id: string) {
 }
 const runs = () => read<ExamRun[]>(RUNS, [])
 function saveRun(r: ExamRun) { write(RUNS, [r, ...runs().filter(v => v.id !== r.id)]) }
-const publicRun = (r: ExamRun): ExamRun => r.status === 'in_progress' ? { ...r, questions: r.questions.map(({ answers: _a, explanation: _e, ...q }) => q) } : r
+const publicRun = (r: ExamRun): ExamRun => r.status === 'in_progress' ? { ...r, layout: r.layout ? { ...r.layout, groups: r.layout.groups.map(({ transcript: _t, ...g }) => g) } : undefined, questions: r.questions.map(({ answers: _a, explanation: _e, rubric: _r, ...q }) => q) } : r
 export function demoRun(id: string) { const r = runs().find(r => r.id === id); if (!r) throw Error('Không tìm thấy bài.'); return publicRun(r) }
 export function demoStart(id: string) {
   const s = demoStore(), doc = s.documents.find(e => e.id === id)
   if (!doc || doc.status !== 'published') throw Error('Đề chưa xuất bản.')
   const active = runs().find(r => r.exam_id === id && r.status === 'in_progress'); if (active) return publicRun(active)
-  const r: ExamRun = { id: crypto.randomUUID(), exam_id: id, title: doc.title, language_code: doc.language_code, version: doc.version, media_keys: doc.media_keys, questions: structuredClone(doc.questions), responses: {}, revision: 0, started_at: new Date().toISOString(), deadline: new Date(Date.now() + doc.duration_minutes * 60000).toISOString(), status: 'in_progress', submitted_at: null, score: 0, max_score: doc.questions.reduce((s, q) => s + q.points, 0), grades: {}, user_id: 'demo', display_name: demoProfile().display_name }
+  const r: ExamRun = { id: crypto.randomUUID(), exam_id: id, title: doc.title, language_code: doc.language_code, version: doc.version, layout: structuredClone(doc.layout), media_keys: [...new Set([...doc.media_keys, ...nestedMedia(doc)])], questions: structuredClone(doc.questions), responses: {}, revision: 0, started_at: new Date().toISOString(), deadline: doc.layout?.mode === 'practice' ? null : new Date(Date.now() + doc.duration_minutes * 60000).toISOString(), status: 'in_progress', submitted_at: null, score: 0, max_score: doc.questions.reduce((s, q) => s + q.points, 0), grades: {}, user_id: 'demo', display_name: demoProfile().display_name }
   saveRun(r); return publicRun(r)
 }
 export function demoResponses(id: string, responses: Record<string, string>, revision: number) {
   const r = runs().find(r => r.id === id)!
-  if (r.status !== 'in_progress' || Date.now() >= Date.parse(r.deadline)) throw Error('Bài đã hết giờ.')
+  if (r.status !== 'in_progress' || (r.deadline !== null && Date.now() >= Date.parse(r.deadline))) throw Error('Bài đã hết giờ.')
   if (r.revision !== revision) throw Error('Bài đã được lưu từ tab khác. Hãy mở lại bài.')
   r.responses = responses; r.revision++; saveRun(r); return r.revision
 }
 export function demoSubmit(id: string, responses: Record<string, string>, revision: number) {
   const r = runs().find(r => r.id === id)!
   if (r.status !== 'in_progress') return r
-  if (Date.now() < Date.parse(r.deadline)) { if (r.revision !== revision) throw Error('Bài đã được lưu từ tab khác.'); r.responses = responses }
+  if ((r.deadline === null || Date.now() < Date.parse(r.deadline))) { if (r.revision !== revision) throw Error('Bài đã được lưu từ tab khác.'); r.responses = responses }
   r.score = 0; r.status = 'graded'
   for (const q of r.questions) {
     const answer = r.responses[q.id] || ''
-    const score = q.kind === 'essay' ? null : (q.kind === 'choice' ? q.answers?.[0] === answer : q.answers?.some(a => normalizeAnswer(a) === normalizeAnswer(answer))) ? q.points : 0
+    const score = q.kind === 'essay' ? null : scoreQuestion(q, answer)
     if (score === null) r.status = 'pending_review'; else r.score += score
     r.grades[q.id] = { score, feedback: '' }
   }
