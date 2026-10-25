@@ -2,17 +2,19 @@
 
 **Quy ước bảo trì theo yêu cầu của chủ dự án:** mỗi lần thay đổi project, phải cập nhật README ngay trong cùng lần làm việc. Điều chỉnh các mục liên quan đến chức năng, mapping mã nguồn, dữ liệu, cấu hình, triển khai và kiểm thử để phản ánh đúng thay đổi; nếu thay đổi nhỏ không ảnh hưởng các mục này, ghi ngắn gọn nội dung thay đổi và cách kiểm tra. Không coi công việc đã hoàn tất khi README còn lệch với mã nguồn.
 
+Quy ước này được lưu thêm trong [AGENTS.md](AGENTS.md) để trợ lý đọc được khi mở repository trên máy hoặc phiên làm việc khác. Khi sửa, cập nhật các mục hướng dẫn hiện hành trước, rồi ghi kết quả kiểm tra; không chỉ nối nhật ký ở cuối file.
+
 React + TypeScript + Tailwind / Cloudflare Pages; Supabase Auth + PostgreSQL; Worker quản lý tài khoản và học liệu Cloudflare R2 riêng tư.
 
-README này vừa hướng dẫn vận hành, vừa là bản đồ để đọc và sửa project. Bản đồ được đối chiếu với mã nguồn ngày **25/10/2026**; đây không phải xác nhận rằng các dịch vụ đã được triển khai hoặc cấu hình trên tài khoản thật.
+README này vừa hướng dẫn vận hành, vừa là bản đồ để đọc và sửa project. Bản đồ được đối chiếu với mã nguồn ngày **26/10/2026**; đây không phải xác nhận rằng các dịch vụ đã được triển khai hoặc cấu hình trên tài khoản thật. Các đường dẫn dưới đây là tương đối từ gốc repository, không phụ thuộc ổ đĩa hoặc tên thư mục trên máy hiện tại.
 
-**Tra cứu nhanh:** [Bản đồ project](#project-map) · [Mapping yêu cầu → nơi sửa](#change-map) · [Hợp đồng dữ liệu và luồng xử lý](#data-flows) · [Quy trình thay đổi và kiểm tra](#change-workflow). Phần chạy local, cấu hình Supabase/R2 và thao tác soạn nội dung nằm bên dưới.
+**Tra cứu nhanh:** [Bắt đầu trên máy khác](#new-machine) · [Menu và quyền truy cập](#screen-map) · [Bản đồ project](#project-map) · [Mapping yêu cầu → nơi sửa](#change-map) · [Hợp đồng dữ liệu và luồng xử lý](#data-flows) · [Trạng thái kiểm chứng](#verification-status) · [Quy trình thay đổi và kiểm tra](#change-workflow). Phần cấu hình Supabase/R2 và thao tác soạn nội dung nằm bên dưới.
 
 Định hướng hiện tại: web cho nhóm nhỏ khoảng 10 người, tài khoản nội bộ do admin cấp, học lý thuyết/từ vựng/nghe và luyện đề tự soạn. **R2 là nơi lưu file; Supabase chỉ dùng Auth, PostgreSQL và metadata file.** Flashcard đã bỏ khỏi luồng sử dụng. Chưa có app native, service worker để học offline hoặc cơ chế đồng bộ dữ liệu demo lên cloud.
 
 ## Chạy trên máy
 
-Node.js 22.12+ (đã kiểm tra với Node 24). Trên PowerShell có ExecutionPolicy hạn chế, dùng `npm.cmd` thay cho `npm`.
+Node.js 22.12+; lần rà soát tài liệu 26/10/2026 dùng Node **26.12.1** / npm **11.20.0**. Các mốc kiểm thử trước được ghi theo ngày ở phần cuối. Trên PowerShell có ExecutionPolicy hạn chế, dùng `npm.cmd` thay cho `npm`; trên macOS/Linux dùng `npm` như các ví dụ dưới đây.
 
 ```sh
 npm ci
@@ -20,6 +22,96 @@ npm run dev
 ```
 
 Không có biến môi trường Supabase: ứng dụng chạy **demo**, lưu nội dung/bài làm trong localStorage của trình duyệt. Dữ liệu này không đồng bộ giữa người dùng hoặc thiết bị. Demo không upload Cloudflare R2, tạo tài khoản thật hoặc đổi mật khẩu. Không dùng demo làm hệ thống nhóm chính thức. Nội dung/bài kiểm tra minh họa cũ được chuyển sang giao diện mới trong trình duyệt; nội dung demo không tự chuyển lên database.
+
+<a id="new-machine"></a>
+
+## Bắt đầu trên máy khác
+
+### Chọn chế độ chạy
+
+Mở terminal tại **gốc repository**, nơi có `package.json`, `src/`, `supabase/` và `media-worker/`. Tên thư mục có thể khác `linguanest`; không cần giữ đường dẫn của máy cũ.
+
+| Bạn cần làm gì? | Chuẩn bị và cách chạy |
+| --- | --- |
+| Đọc/sửa UI, xem demo | Cài Node/npm, lấy toàn bộ repo, chạy `npm ci` rồi `npm run dev`. Để trống cấu hình Supabase; không cần tài khoản cloud hoặc chạy SQL. Demo vào thẳng giao diện admin thử nghiệm. |
+| Dùng lại hệ thống cloud đã có | Cài frontend như trên, tạo `.env` từ `.env.example` và điền đúng Supabase URL/public key/Worker URL đang dùng. Đăng nhập bằng tài khoản đã được cấp. Dùng lại database/R2 hiện có; không tạo database hoặc chạy lại toàn bộ SQL chỉ vì đổi máy. |
+| Dựng một hệ thống cloud mới | Làm theo [Cấu hình Supabase](#cấu-hình-supabase), [Worker/R2](#worker-và-cloudflare-r2) và [Cloudflare Pages](#triển-khai-cloudflare-pages). Áp dụng đúng chuỗi SQL, tạo admin đầu tiên, cấu hình R2/Worker và frontend cùng một project. |
+| Sửa/chạy Worker local | Cài thêm dependencies của Worker bằng `npm --prefix media-worker ci`. Tạo `media-worker/.dev.vars`, cấu hình Wrangler và chạy `npm --prefix media-worker run dev`; frontend dùng Worker ở `http://localhost:8787`. Supabase vẫn là dịch vụ đã cấu hình, R2 được giả lập local theo hướng dẫn bên dưới. |
+
+Với cấu hình cloud, các thao tác học/soạn/lưu thực sự đọc và ghi vào dịch vụ đã điền trong cấu hình. Nếu chỉ chạy frontend dùng Worker đã triển khai, không cần đăng nhập Cloudflare hoặc chạy Wrangler trên máy mới.
+
+### Các bước tối thiểu để mở project
+
+1. Clone repo hoặc chép đầy đủ mã nguồn, gồm cả lockfile gốc và lockfile trong `media-worker/`, thư mục `public/`, toàn bộ `supabase/`, README và AGENTS. Nếu chép thư mục, giữ cả `.env.example` và các file ẩn cần thiết.
+2. Đọc README và AGENTS; kiểm tra đang ở đúng gốc project bằng việc thấy `package.json` có tên `linguanest-study-app`.
+3. Chạy các lệnh sau tại gốc; terminal sẽ in địa chỉ Vite thực tế để mở trên trình duyệt:
+
+```sh
+node --version
+npm --version
+npm ci
+npm run dev
+```
+
+4. Nếu cần cloud, tạo `.env` **khi file chưa có** rồi điền cấu hình riêng. Dừng Vite và chạy lại sau khi đổi biến môi trường. Không ghi đè `.env` đang dùng bằng mẫu rỗng.
+5. Nếu sửa hoặc kiểm tra Worker, cài dependencies riêng và dùng thêm các lệnh sau. Cài dependencies không tự chạy migration hay deploy:
+
+```sh
+npm --prefix media-worker ci
+npm --prefix media-worker run check
+```
+
+Frontend và Worker có hai lockfile riêng: dùng `npm ci` tương ứng, không mang `node_modules/` từ Windows sang macOS/Linux. `dist/`, `.wrangler/`, `test-results/`, `playwright-report/` và `*.tsbuildinfo` là đầu ra sinh lại được.
+
+### Cấu hình và dữ liệu nào cần mang theo?
+
+| Thành phần | Khi đổi máy |
+| --- | --- |
+| Mã nguồn, SQL, seed, scripts, tests, hai lockfile, README/AGENTS | Nằm trong repo; lấy cùng phiên bản để mapping và cách chạy khớp nhau. |
+| `.env`, `.env.local`, `media-worker/.dev.vars` | Bị Git bỏ qua. Lấy cấu hình cần dùng từ nơi lưu riêng, đối chiếu `.env.example` và phần Worker. Không chép secret vào README hoặc biến `VITE_*`. |
+| Supabase Auth/PostgreSQL và file R2 thật | Nằm trên dịch vụ, không nằm trong repo. Cùng cấu hình cloud và tài khoản sẽ đọc lại dữ liệu hiện có. Repo có SQL đến **009**, nhưng trạng thái SQL đã chạy trên dịch vụ phải kiểm tra riêng; không suy ra từ tên file. |
+| Nội dung/ảnh/bài làm demo, bản nháp và dự phòng câu trả lời | Nằm trong localStorage của trình duyệt theo origin (giao thức + hostname + port), không đi theo Git hoặc thao tác chép repo. Đổi máy, trình duyệt, `localhost` sang `127.0.0.1` hoặc port có thể thấy kho demo khác. |
+| Bản nháp soạn nội dung khi dùng cloud | Nháp tự lưu trên trình duyệt vẫn là dữ liệu local; bấm Lưu để lưu máy chủ trước khi chuyển máy. Form hồ sơ chỉ xem trước ảnh/tên cho tới khi bấm Lưu hồ sơ. |
+| R2 local của Wrangler | Nằm trong `.wrangler/` trên máy chạy Worker; không tự chuyển sang máy khác hoặc bucket R2 thật. |
+
+Project chưa có chức năng xuất/nhập toàn bộ kho localStorage hoặc tự đồng bộ demo lên cloud. Giữ trình duyệt/máy cũ nếu còn nội dung chưa được chuyển; không xóa localStorage để giải quyết khác biệt dữ liệu. Chi tiết key ở [Dữ liệu trình duyệt](#dữ-liệu-trình-duyệt-và-giới-hạn-demo).
+
+### Vì sao máy mới có thể vào thẳng web mà không đăng nhập?
+
+`src/lib/supabase.ts` chỉ bật `cloudMode` khi có **cả** `VITE_SUPABASE_URL` và `VITE_SUPABASE_ANON_KEY`. Thiếu một trong hai thì app dùng demo, bỏ qua màn hình đăng nhập và mặc định hồ sơ admin. Có đủ hai biến thì app dùng Supabase Auth; phiên đã lưu hợp lệ cũng có thể vào thẳng ứng dụng. Thiếu `VITE_MEDIA_WORKER_URL` không tắt cloudMode, nhưng đổi mật khẩu, upload và đọc ảnh/file qua Worker sẽ không hoạt động đầy đủ.
+
+Tài khoản thật do admin cấp; chưa có đăng ký tự do. Người dùng `member` không thấy menu Quản trị, còn admin vẫn thấy khi đang ở trang học. Người bị khóa/chưa duyệt bị chặn; người dùng mật khẩu tạm phải đổi mật khẩu trước khi học.
+
+### Kiểm tra nhanh khi mở trên máy khác
+
+| Hiện tượng | Kiểm tra |
+| --- | --- |
+| `npm` bị PowerShell chặn | Dùng `npm.cmd` cho các lệnh trên Windows. |
+| Không thấy `package.json` hoặc chạy nhầm app | Mở terminal tại gốc repo, không phải thư mục cha hoặc `media-worker/`. |
+| Dữ liệu/đăng nhập khác máy cũ | Kiểm tra đang demo hay cloud, Supabase URL và origin trình duyệt. Repo không mang theo localStorage. |
+| Worker báo CORS khi mở local | Origin frontend phải khớp `ALLOWED_ORIGINS`. Nếu port 5173 bận, Vite có thể đổi port; dùng port đã cho phép hoặc cập nhật origin và triển khai/chạy lại Worker. |
+| Lỗi thiếu RPC hoặc cột `avatar_key` | Đối chiếu đúng Supabase project và migration đã áp dụng: practice 006, trạng thái 007, avatar 008, leaderboard 009. Không chạy lại 001 để sửa. |
+| UI test báo thiếu Edge | `playwright.config.ts` hiện dùng `channel: 'msedge'`; cài Edge hoặc cài Chromium bằng `npx playwright install chromium` và sửa cấu hình browser phù hợp trên máy đó. Cài Chromium không tự đổi channel. |
+
+<a id="screen-map"></a>
+
+## Menu, màn hình và quyền truy cập
+
+Điều hướng dùng state trong `App.tsx`, không có URL riêng cho từng màn hình hoặc React Router. Tải lại trang thường trở về Tổng quan; mở lại lượt làm đã lưu qua bài học/lịch sử.
+
+| Màn hình/menu | Quyền | State và nơi xử lý |
+| --- | --- | --- |
+| Đăng nhập, chặn tài khoản, bắt đổi mật khẩu | Người dùng cloud theo session/profile | `Login` và các gate trong `App.tsx`; `loadProfile`, `loginIdentity`, `Account`, Supabase Auth. Không phải một giá trị `Page`. |
+| Tổng quan | Member/admin được vào học | `dashboard` → `App.tsx`: summary, XP và bài học gợi ý. |
+| Bài học → nội dung bài | Member/admin được vào học | `courses`/`lesson` → `LessonCards`, `LessonPage`, `LessonBlocks`, `StudyBadge`, từ vựng và `LessonListening`. Nghe nằm trong bài. |
+| Luyện tập của bài học | Member/admin được vào học | `practice` → `LessonPractice` mở lượt, `PracticePlayer`/`PracticeQuestion` ở màn hình riêng; quay về bài gốc. |
+| Luyện đề thi / xem kết quả | Member/admin được vào học | `exams` và state `run` → `ExamCatalog`, `ExamPlayer`; snapshot/revision/deadline qua API và SQL. |
+| Tiến độ & lịch sử | Member/admin được vào học | `progress` → `History` trong `App.tsx`; bài tập cũ được xem trong Bài học qua `LegacyPracticeHistory`. |
+| Bảng xếp hạng | Member/admin được vào học | `leaderboard` → `Leaderboard.tsx`, tổng XP nhóm và `Avatar`; không lọc theo ngôn ngữ sidebar. |
+| Tài khoản | Chủ tài khoản | `account` → `Account.tsx`, `Avatar.tsx`: xem trước tên/ảnh, Lưu hồ sơ hoặc Hủy thay đổi; form đổi mật khẩu riêng. |
+| Quản trị | Chỉ `profile.role === 'admin'` | `admin` + `adminTab`: Bài học/Đề thi → `ContentAdmin`; Thư viện file/Thành viên/Chấm tự luận → `OperationsAdmin`. Các màn hình admin được lazy-load. |
+
+Quyền thực tế còn được kiểm tra ở RLS/RPC và Worker, không chỉ ở menu. Bảng xếp hạng chia sẻ tên/ảnh/XP/hạng, không mở toàn bộ hồ sơ hoặc bài làm của người khác. Trong đề thi, tự luận do admin chấm; trong luyện tập của bài học, tự luận dùng để tự đối chiếu.
 
 ## Chức năng
 
@@ -154,6 +246,18 @@ Sau triển khai, kiểm tra bằng một admin và hai thành viên thật: đ�
 
 ## Kiểm thử
 
+<a id="verification-status"></a>
+
+### Trạng thái kiểm chứng và cách đọc kết quả cũ
+
+| Mốc | Phạm vi và kết quả được ghi nhận |
+| --- | --- |
+| 25/10/2026, sau khi thêm bảng xếp hạng | TypeScript frontend/Worker và build đạt; Node tests **47/47**, Playwright **22/22** trên Edge desktop/mobile giả lập. Chi tiết ở cuối README. Đây là lịch sử kiểm thử của lần sửa đó. |
+| 26/10/2026, rà soát bàn giao/mapping | Chỉ sửa README và thêm AGENTS: đối chiếu cấu trúc, liên kết/anchor, menu, exports/API/RPC, migration, scripts và cấu hình hiện tại. Không chạy lại build/UI hoặc coi các số kiểm thử cũ là kết quả vừa chạy. |
+| Supabase/R2/Pages thật | Chưa được xác minh lại trong lần rà tài liệu này. File SQL, config và test mock không chứng minh trạng thái deploy, migration hoặc secret trên tài khoản thật. |
+
+Các số 12/14/18 ca UI hoặc 35/39/43 Node tests trong ghi chép ngày trước là số ở thời điểm đó. Bộ nguồn hiện tại có **47 Node test** và **11 kịch bản UI × 2 viewport = 22 lượt**, phải chạy trên máy hiện tại mới có kết quả mới. Không có script/config lint riêng. Những lệnh sau dùng để kiểm tra khi cần, không tự áp dụng SQL hoặc deploy dịch vụ:
+
 ```sh
 npm run check
 npm run build
@@ -180,7 +284,31 @@ npm run test:ui
 
 ### Điểm bắt đầu và kiến trúc
 
-Thư mục gốc ứng dụng là `linguanest/`; các đường dẫn trong README tính từ thư mục này. Frontend và Worker có `package.json`, `package-lock.json`, `tsconfig.json` riêng. Không có backend Express/Next.js hoặc ORM; schema, phân quyền và nghiệp vụ cloud nằm trong SQL và Worker.
+Gốc ứng dụng là thư mục chứa `package.json` có tên package `linguanest-study-app`; trong ví dụ gọi là `linguanest/`, nhưng tên thư mục trên máy không bắt buộc như vậy. Các đường dẫn trong README tính từ gốc này. Frontend và Worker có `package.json`, `package-lock.json`, `tsconfig.json` riêng. Không có backend Express/Next.js hoặc ORM; schema, phân quyền và nghiệp vụ cloud nằm trong SQL và Worker.
+
+```text
+<repo>/
+├── AGENTS.md                 Quy ước cho các phiên làm việc, bắt buộc cập nhật README
+├── README.md                 Hướng dẫn chạy, mapping và vận hành
+├── package.json / package-lock.json   Dependencies và scripts frontend/test
+├── .env.example              Tên ba biến public của frontend; .env thực không nằm trong Git
+├── index.html / vite.config.ts / tsconfig.json
+├── public/_redirects         SPA fallback của Cloudflare Pages
+├── src/
+│   ├── main.tsx / App.tsx     Khởi động React, session/profile, state điều hướng và trang chính
+│   ├── components/           Trình soạn, player, tài khoản, bảng xếp hạng, quản trị
+│   ├── lib/                  API adapter, demo, types, validation, authoring và helpers
+│   ├── data/demo.json        Seed demo; không phải bản sao database cloud
+│   └── styles.css / platform.css / practice.css
+├── supabase/                 SQL 001–009; 005 chỉ cho Storage cũ
+├── media-worker/
+│   ├── src/index.ts          HTTP API tài khoản, avatar và file R2
+│   ├── wrangler.jsonc        Binding R2, public Supabase config, CORS
+│   └── package.json / package-lock.json / tsconfig.json
+├── tests/                    Node tests và tests/ui/ chạy Playwright
+├── playwright.config.ts      Browser desktop/mobile và setup Vite demo
+└── tools/                    Validate seed và script nâng cấp authoring cũ
+```
 
 ```mermaid
 flowchart LR
@@ -203,7 +331,10 @@ flowchart LR
 
 | File | Chức năng / điểm tìm nhanh |
 | --- | --- |
+| [AGENTS.md](AGENTS.md), [README.md](README.md) | Quy ước bền vững theo repo, lộ trình bắt đầu trên máy khác và bản đồ để sửa đúng lớp. |
+| [package.json](package.json), [media-worker/package.json](media-worker/package.json), [.env.example](.env.example) | Hai nhóm lệnh/dependencies; tên cấu hình public frontend. Lockfile ở cùng mỗi package. |
 | [src/App.tsx](src/App.tsx) | `Login`, session/profile gate, dashboard, `LessonPage`, `ExamCatalog`, `History`; tải lại nội dung và XP sau thao tác. Page/menu `leaderboard` cho cả thành viên và admin; không có Luyện nghe riêng; Quản trị chỉ dành cho admin. |
+| [src/main.tsx](src/main.tsx), [src/lib/supabase.ts](src/lib/supabase.ts), [src/lib/api.ts](src/lib/api.ts) | Mount React/CSS; quyết định demo/cloud; điểm nối UI → demo hoặc Supabase SELECT/RPC/Worker. `avatarBlob(memberId?)` phân biệt ảnh cá nhân và ảnh thành viên. |
 | [src/components/Leaderboard.tsx](src/components/Leaderboard.tsx) | Tải bảng xếp hạng qua `loadLeaderboard`, trạng thái loading/lỗi/thử lại, nút Làm mới; thứ hạng/tên/ảnh/XP, vị trí cá nhân, đồng hạng và responsive. |
 | [src/components/StudyBadge.tsx](src/components/StudyBadge.tsx) | `studyState`/`lessonStudyState`: màu và nhãn theo tiến độ cá nhân, điểm lần hoàn thành gần nhất; dùng ở danh sách, trang bài học và khu vực luyện tập. |
 | [src/components/LegacyPracticeHistory.tsx](src/components/LegacyPracticeHistory.tsx) | Lượt bài tập cũ theo bài học hoặc chưa gắn bài; phân trang, xem/tiếp tục bằng ExamPlayer và quay lại Bài học. |
@@ -222,17 +353,18 @@ flowchart LR
 | [src/components/Account.tsx](src/components/Account.tsx) | Giữ tên và ảnh đang sửa trong state; chọn/thay/xóa ảnh chỉ xem trước, nút Lưu hồ sơ mới gọi API cập nhật. Hủy thay đổi phục hồi dữ liệu đã lưu; dùng `useUnsavedChanges` khi rời trang. Đổi mật khẩu riêng, gồm luồng bắt buộc đổi mật khẩu tạm. |
 | [src/components/Avatar.tsx](src/components/Avatar.tsx), [src/lib/avatar.ts](src/lib/avatar.ts) | Hiển thị ảnh private qua blob URL, thu hồi URL khi đổi ảnh/unmount, fallback chữ cái; `memberAvatar` đọc ảnh thành viên qua `avatarBlob(profile.id)` cho bảng xếp hạng. `previewURL` ghi đè ảnh trong form mà không đổi sidebar. Kiểm tra định dạng/kích thước ảnh và đọc ảnh demo/preview. |
 | [src/components/LessonListening.tsx](src/components/LessonListening.tsx) | Chép lại và đối chiếu transcript ngay trong khối bài học; dùng giọng đọc khi khối không có MP3. `LessonContent` nhận `lang` để bật phần này khi học; preview editor vẫn xem transcript. |
-| [src/lib/types.ts](src/lib/types.ts) | Hợp đồng TypeScript: Lesson/Question/ExamLayout/ExamDocument/ExamRun/Profile; `Lang`, `LANG_DETAILS` chứa bốn ngôn ngữ và giọng đọc. |
+| [src/lib/types.ts](src/lib/types.ts) | Hợp đồng TypeScript: Lesson/Question/ExamLayout/ExamDocument/ExamRun/Profile, PracticeDocument/PracticeRun/PracticeCheck, Summary/LessonStudyStatus và LeaderboardEntry; `Lang`, `LANG_DETAILS` chứa bốn ngôn ngữ và giọng đọc. |
 | [src/lib/content.ts](src/lib/content.ts) | `parseCSV`, `importCSV`, `validateQuestions`, `newQuestion`, `normalizeAnswer`, `loginIdentity`; validation frontend và quy ước CSV. |
 | [src/lib/authoring.ts](src/lib/authoring.ts) | `lessonBlocks`/`layoutOf` tương thích dữ liệu cũ; `templateDocument` khung đề; `scoreQuestion`/`correctAnswer` chấm demo và bài tập nhanh; `lessonMedia`/`nestedMedia` gom key. |
 | [src/lib/demo.ts](src/lib/demo.ts) | Kho demo, CRUD, snapshot lượt làm, chấm điểm và XP bằng localStorage. Cần đối chiếu khi thay nghiệp vụ cloud; không thay thế kiểm thử RLS. |
-| [src/styles.css](src/styles.css), [src/platform.css](src/platform.css) | Styles nền, sau đó styles mở rộng cho nền tảng/biên soạn/làm đề. Có CSS cũ còn lưu; thấy class flashcard không có nghĩa tính năng còn hoạt động. |
+| [src/styles.css](src/styles.css), [src/platform.css](src/platform.css), [src/practice.css](src/practice.css) | Import theo thứ tự này trong main: nền → nền tảng/soạn/làm đề/hồ sơ/leaderboard → luyện tập/trạng thái học. Có CSS cũ còn lưu; thấy class flashcard không có nghĩa tính năng còn hoạt động. |
 | [media-worker/src/index.ts](media-worker/src/index.ts) | Router HTTP, xác thực/profile gate, tài khoản nội bộ, ticket HMAC, kiểm tra upload, R2 put/get/head/delete và HTTP Range. |
 | [media-worker/wrangler.jsonc](media-worker/wrangler.jsonc) | Binding R2 `MEDIA_BUCKET`, bucket `linguanest-media`, Supabase public config, CORS `ALLOWED_ORIGINS`; secret được đặt riêng. |
 | [src/data/demo.json](src/data/demo.json) | Seed demo theo cấu trúc cũ (courses/lessons/vocabulary/exercises), được `demo.ts` chuyển sang tài liệu đề tương thích rồi sao chép thành luyện tập bài học khi khởi tạo. Không phải dữ liệu cloud. |
 | [tools/validate-data.mjs](tools/validate-data.mjs) | Kiểm tra ID, quan hệ và câu hỏi seed demo; không kiểm tra toàn bộ schema nội dung mới. |
 | [tools/upgrade-authoring.py](tools/upgrade-authoring.py) | Script đã dùng để sinh `004_structured_content.sql` từ một phần `003` và SQL nhúng. Chạy lại sẽ ghi đè file 004; không phải lệnh khởi động hay nâng cấp thường ngày. |
 | [vite.config.ts](vite.config.ts), [public/_redirects](public/_redirects) | Vite React/Tailwind, chia bundle; SPA fallback trên Pages. |
+| [playwright.config.ts](playwright.config.ts), [tests/ui/setup.ts](tests/ui/setup.ts) | Hai viewport qua Edge; setup mở Vite 4173 và ép demo. Đổi browser/channel rõ ràng khi máy mới không có Edge. |
 
 ### Database: đọc file nào trước
 
@@ -242,11 +374,11 @@ flowchart LR
 | [002_seed.sql](supabase/002_seed.sql) | Nội dung mẫu cho database mới. Sửa seed không tự cập nhật nội dung của project đã triển khai. |
 | [003_learning_platform.sql](supabase/003_learning_platform.sql) | Accounts gate, bảng đề/phiên bản/lượt làm/media, RLS và quyền RPC; nâng cấp bài tập cũ, lịch sử, XP, chấm tự luận, quyền/xóa file. |
 | [004_structured_content.sql](supabase/004_structured_content.sql) | Blocks/layout, chế độ luyện tập, validation/chấm dạng câu mới, gom media lồng nhau; ghi đè các RPC soạn bài/đề và xử lý lượt làm. |
+| [005_private_storage.sql](supabase/005_private_storage.sql) | Legacy, chỉ cho bucket Supabase Storage cũ; không cần cho R2. Giữ nguyên số migration đã tồn tại. |
+| [006_lesson_practice.sql](supabase/006_lesson_practice.sql) | Practice riêng theo bài học, RLS/RPC, snapshot/checks/revision, sao chép bài tập cũ an toàn, mở rộng quyền giữ file R2. |
 | [007_study_status.sql](supabase/007_study_status.sql) | Ghi bắt đầu đọc bài theo user, summary trạng thái/điểm, tách lịch sử thi và bài tập cũ trước phân trang; giữ tổng XP/lịch sử. |
 | [008_profile_avatar.sql](supabase/008_profile_avatar.sql) | Thêm avatar key vào profile, RPC đổi key khóa hàng và trả key cũ, chỉ service role được gọi; giữ nguyên quyền cập nhật tên. |
 | [009_leaderboard.sql](supabase/009_leaderboard.sql) | RPC `xp_leaderboard`, tổng XP theo công thức summary trên toàn bộ lịch sử, dense rank theo XP, payload chỉ có id/tên/avatar key/XP/hạng, gate thành viên. |
-| [006_lesson_practice.sql](supabase/006_lesson_practice.sql) | Practice riêng theo bài học, RLS/RPC, snapshot/checks/revision, sao chép bài tập cũ an toàn, mở rộng quyền giữ file R2. |
-| [005_private_storage.sql](supabase/005_private_storage.sql) | Legacy, chỉ cho bucket Supabase Storage cũ; không cần cho R2. Giữ nguyên số migration đã tồn tại. |
 
 **Logic hiện hành:** `save_lesson`, `get_exam_document`, `run_payload`, `submit_exam` từ **004**. `save_exam` và `start_exam` được **006** bọc để chặn sửa/bắt đầu đề nguồn đã chuyển; implementation cũ đổi tên hậu tố `_before_practice`. `can_access_media_for`/`reserve_media_delete` cũng được 006 bọc để xét practice và lịch sử. Các RPC mới cho lesson practice đều ở 006. `save_exam_responses`, `get_exam_run`, `grade_exam`, `list_exam_runs`, `complete_lesson`, `member_summaries` vẫn từ **003**. `learning_summary` được **007** bọc (bản 003 đổi tên `learning_summary_before_study_status`) để bổ sung trạng thái cá nhân và thống kê thi riêng. Trang lịch sử dùng `exam_history` (007); `list_exam_runs` vẫn dành cho tương thích và chấm tự luận. Không chạy lại migration cũ để sửa logic đã bị ghi đè.
 
@@ -256,6 +388,7 @@ flowchart LR
 
 ### Mô hình nội dung
 
+- `auth.users → profiles`: tài khoản Supabase và hồ sơ ứng dụng (tên, role, active/password gate, avatar key). `LeaderboardEntry` là payload chia sẻ tối thiểu từ RPC 009, không thay thế quyền đọc `profiles`. Ảnh thật trong R2; `avatar_data_url` chỉ thuộc demo.
 - `courses → lessons → vocabulary`. `lessons.blocks` chứa các khối `text/formula/table/example/note/media/quiz`. Trường `body` của khối bảng là chuỗi: hàng ngăn bằng newline, ô ngăn bằng tab; hàng đầu là tiêu đề. Xem `BlockEditor` và `LessonContent` trước khi thay định dạng. `lessonBlocks()` chuyển các trường bài cũ sang khối để hiển thị/biên tập, gồm audio/transcript. Khi lưu bài, editor vẫn tổng hợp transcript vào `listening_text` để giữ tương thích; học nghe hiện nằm trong từng khối có transcript qua `LessonListening`, không có trang nghe riêng.
 - `lessons → lesson_practices`: một tài liệu luyện tập/bài học, chứa nhiều câu JSONB, version, enabled, layout/media và nguồn chuyển đổi. `lesson_practice_runs` lưu snapshot độc lập, responses, checks, revision và trạng thái in_progress/completed; một lượt đang làm/user/bài. Bảng bật RLS, không cấp quyền SELECT/ghi trực tiếp cho authenticated/anon; chỉ dùng RPC kiểm tra quyền.
 - `exam_types → exams → exam_versions`. `exams` chứa thông tin danh sách và version hiện tại, không chứa đáp án. `exam_versions` giữ `questions` và `layout` theo version. Một lesson gắn tối đa một exam qua `exams.lesson_id UNIQUE`; đề độc lập có `lesson_id = null`.
@@ -358,7 +491,7 @@ Xóa localStorage có thể mất bản nháp/bài làm chưa đồng bộ; khô
 3. Với database đã triển khai, thêm migration tiến tới thay vì chỉ sửa file đã chạy. Số kế tiếp hiện là **010**; không tái sử dụng 005 dù R2 bỏ qua nó. Cập nhật danh sách migration chạy trong `tests/database.test.mjs` và hướng dẫn cài mới/nâng cấp. Không chạy lại `tools/upgrade-authoring.py` như một bước build.
 4. Giữ snapshot/lịch sử và khả năng đọc nội dung cũ; không tự xóa file hay bảng cũ. Khi thêm field đáp án/transcript/rubric, kiểm tra payload thành viên thực nhận ở server.
 5. Chạy kiểm tra theo phạm vi bên dưới; chỉ chỉnh README thì đối chiếu đường dẫn, tên hàm, script và quy trình, không cần chạy lại toàn bộ UI/build.
-6. Sau khi hoàn thành, cập nhật mapping, hợp đồng, migration và lệnh kiểm tra trong README nếu đã đổi. Báo rõ đã kiểm tra local hay dịch vụ thật; không ghi trạng thái triển khai dựa vào mã nguồn.
+6. Sau khi hoàn thành, cập nhật các mục hiện hành của README ngay trong cùng lần sửa theo [AGENTS.md](AGENTS.md): chức năng/menu/quyền, mapping, hợp đồng, migration, cấu hình/cách chạy và lệnh kiểm tra nếu đã đổi. Thay đổi nhỏ cũng ghi ngắn gọn nội dung và cách kiểm tra. Báo rõ đã kiểm tra local hay dịch vụ thật; không ghi trạng thái triển khai dựa vào mã nguồn hoặc kết quả cũ.
 
 ### Chọn kiểm tra theo phạm vi
 
@@ -483,3 +616,10 @@ Kiểm chứng phần trạng thái học và lịch sử ngày 24/10/2026: `npm
 - Worker thêm `GET /members/<uuid>/avatar` để người trong nhóm xem ảnh hiện tại trên bảng; kiểm tra session và trạng thái cả người xem lẫn tài khoản đích. Quyền cập nhật/xóa ảnh vẫn chỉ dành cho chính tài khoản đó. Không công khai R2, không thêm bucket/secret/cấu hình môi trường.
 - Demo chỉ xếp hồ sơ hiện có trên trình duyệt, dùng tên/ảnh đã lưu và XP demo thật; không tạo thành viên giả. Test UI có bộ dữ liệu nhóm mock riêng để kiểm tra nhiều hàng, đồng hạng, ảnh mặc định và tên dài; các kiểm thử này không tạo tài khoản dịch vụ thật.
 - Kiểm chứng local ngày 25/10/2026: `npm run check`, `npm run build`, `npm --prefix media-worker run check` đạt; `npm test` **47/47**; toàn bộ `npm run test:ui` **22/22** trên Edge desktop/mobile giả lập. Đã xem ảnh bảng xếp hạng hai viewport và kiểm tra không tràn ngang. SQL được kiểm tra qua PGlite với Auth giả lập, Worker/R2 dùng mock; chưa áp dụng migration/deploy/kiểm tra dịch vụ thật. Chạy **009 sau 008**, rồi triển khai Worker/frontend để dùng trên cloud. Migration có thể chạy lại.
+
+## Rà soát tài liệu và bàn giao máy khác ngày 26/10/2026
+
+- Bổ sung lộ trình demo/cloud có sẵn/cloud mới, vị trí chạy lệnh, hai bộ dependencies/lockfile, cấu hình cần tạo lại và dữ liệu không đi theo Git. Thêm bảng xử lý lỗi khi đổi máy, giải thích đăng nhập/demo và phạm vi dữ liệu trình duyệt.
+- Mapping lại cây thư mục, menu/state/quyền, các file nền/API/types/styles và sắp bảng migration 001–009 theo thứ tự số; hướng dẫn cài cloud vẫn bỏ qua 005 dành cho Storage cũ. Các đường dẫn tương đối dùng được dù đổi ổ đĩa hoặc tên thư mục.
+- Thêm `AGENTS.md` để lưu yêu cầu của chủ dự án: mỗi lần thay đổi project phải cập nhật các mục README liên quan trong cùng lần làm việc. File này cần được mang cùng repo sang máy khác.
+- Kiểm tra tài liệu bằng script đọc file local: **75 liên kết/anchor**, **30 định nghĩa RPC frontend/Worker**, **43 tham chiếu npm script** hợp lệ; thứ tự **8 SQL cloud** trong README trùng danh sách DB tests. Đếm tĩnh xác nhận 47 Node test và 11 kịch bản UI × 2 viewport; đây không phải chạy lại test. `git diff --check` đạt. Chỉ thay README/AGENTS, không chạy build/UI, SQL hoặc deploy dịch vụ trong lần này.
