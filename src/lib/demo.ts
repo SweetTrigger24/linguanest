@@ -1,5 +1,6 @@
 import { checkPractice, emptyPractice, publicPracticeRun, validatePractice, learningExam } from './practice'
 import type { PracticeDocument, PracticeRun } from './types'
+import type { LeaderboardEntry } from './types'
 import { scoreQuestion, nestedMedia } from './authoring'
 import seed from '../data/demo.json'
 import { validateQuestions } from './content'
@@ -24,6 +25,7 @@ export function demoStore(): Store {
 }
 export const demoProfile = (): Profile => read('linguanest_profile_v2', { id: 'demo', username: 'demo', display_name: 'Bạn học thử', role: 'admin', is_active: true, must_change_password: false })
 export function demoRename(name: string) { write('linguanest_profile_v2', { ...demoProfile(), display_name: name }) }
+export function demoAvatar(data: string | null) { write('linguanest_profile_v2', { ...demoProfile(), avatar_data_url: data }) }
 export function demoLesson(lesson: Lesson, words: Word[]) {
   const s = demoStore(); const id = lesson.id || crypto.randomUUID()
   s.lessons = [...s.lessons.filter(l => l.id !== id), { ...lesson, id, is_published: lesson.status === 'published' }]
@@ -91,6 +93,12 @@ export const demoHistory = (offset: number, pending: boolean) => runs().filter(r
 export function demoSummary(): Summary {
   const progress = read<Progress[]>('linguanest_demo_progress_v1', []), legacy = read<{ correct_count: number; total_count: number }[]>('linguanest_demo_attempts_v1', [])
   return { lesson_status: demoStudyStatus(), dedicated_exam_count: demoDedicatedRuns().filter(r => r.status !== 'in_progress').length, exam_xp: demoDedicatedRuns().filter(r => r.status === 'graded').reduce((sum, r) => sum + r.score * 5, 0), progress, xp: progress.reduce((s, p) => s + p.xp, 0) + legacy.reduce((s, a) => s + Math.min(a.correct_count, a.total_count) * 5, 0) + runs().filter(r => r.status === 'graded').reduce((s, r) => s + r.score * 5, 0), exam_count: runs().filter(r => r.status !== 'in_progress').length, legacy_count: legacy.length }
+}
+
+export function demoLeaderboard(): LeaderboardEntry[] {
+  practiceMember()
+  const { id, display_name, avatar_data_url } = demoProfile()
+  return [{ id, display_name, avatar_data_url, xp: demoSummary().xp, rank: 1 }]
 }
 
 

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
-import type { LessonBlock } from '../lib/types'
+import type { Lang, LessonBlock } from '../lib/types'
+import LessonListening from './LessonListening'
 import { blockNames, correctAnswer } from '../lib/authoring'
 import { newQuestion } from '../lib/content'
 import { AttachmentList, Notice, QuestionBody } from './Common'
@@ -20,8 +21,8 @@ function QuickQuiz({ block }: { block: LessonBlock }) {
   if (!block.question) return null
   return <><QuestionBody question={block.question} value={value} onChange={v => { setValue(v); setChecked(false) }} /><button type="button" className="btn-secondary" onClick={() => setChecked(true)}>Kiểm tra</button>{checked && <Notice>{correctAnswer(block.question, value) ? 'Chính xác!' : 'Chưa đúng hoàn toàn. Hãy thử lại.'} {block.question.explanation}</Notice>}</>
 }
-export function LessonContent({ blocks }: { blocks: LessonBlock[] }) {
-  return <div className="lesson-content-layout"><nav className="card-box lesson-toc" aria-label="Mục lục bài học"><b>Trong bài này</b>{blocks.map((b, i) => <a key={b.id} href={`#block-${b.id}`}>{i + 1}. {b.title || blockNames[b.kind]}</a>)}</nav><div className="stack">{blocks.map(b => <section className={`card-box lesson-block block-${b.kind}`} id={`block-${b.id}`} key={b.id}><h2>{b.title || blockNames[b.kind]}</h2>{b.kind === 'quiz' ? <QuickQuiz block={b} /> : b.kind === 'table' ? <div className="table-scroll"><table><tbody>{b.body.split('\n').map((row, i) => <tr key={i}>{row.split('\t').map((cell, j) => i === 0 ? <th key={j}>{cell}</th> : <td key={j}>{cell}</td>)}</tr>)}</tbody></table></div> : <RichText text={b.body} />}{b.translation && <p className="translation">{b.translation}</p>}<AttachmentList keys={b.media_keys || []} />{b.transcript && <details><summary>Xem transcript</summary><RichText text={b.transcript} /></details>}</section>)}</div></div>
+export function LessonContent({ blocks, lang }: { blocks: LessonBlock[]; lang?: Lang }) {
+  return <div className="lesson-content-layout"><nav className="card-box lesson-toc" aria-label="Mục lục bài học"><b>Trong bài này</b>{blocks.map((b, i) => <a key={b.id} href={`#block-${b.id}`}>{i + 1}. {b.title || blockNames[b.kind]}</a>)}</nav><div className="stack">{blocks.map(b => <section className={`card-box lesson-block block-${b.kind}`} id={`block-${b.id}`} key={b.id}><h2>{b.title || blockNames[b.kind]}</h2>{b.kind === 'quiz' ? <QuickQuiz block={b} /> : b.kind === 'table' ? <div className="table-scroll"><table><tbody>{b.body.split('\n').map((row, i) => <tr key={i}>{row.split('\t').map((cell, j) => i === 0 ? <th key={j}>{cell}</th> : <td key={j}>{cell}</td>)}</tr>)}</tbody></table></div> : <RichText text={b.body} />}{b.translation && <p className="translation">{b.translation}</p>}<AttachmentList keys={b.media_keys || []} />{b.transcript && (lang ? <LessonListening key={b.transcript} transcript={b.transcript} lang={lang} hasAudio={!!b.media_keys?.some(k => /\.mp3$/i.test(k))} /> : <details><summary>Xem transcript</summary><RichText text={b.transcript} /></details>)}</section>)}</div></div>
 }
 export function BlockEditor({ blocks, onChange }: { blocks: LessonBlock[]; onChange: (b: LessonBlock[]) => void }) {
   const [selected, setSelected] = useState(blocks[0]?.id || ''), [kind, setKind] = useState<LessonBlock['kind']>('text')

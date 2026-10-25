@@ -29,7 +29,8 @@ export interface ExamRun {
   grades: Record<string, { score: number | null; feedback: string }>;
   user_id?: string; display_name?: string; server_now?: string;
 }
-export interface Profile { id: string; display_name: string; username: string | null; role: 'admin' | 'member'; is_active: boolean; must_change_password: boolean }
+export interface Profile { id: string; display_name: string; username: string | null; role: 'admin' | 'member'; is_active: boolean; must_change_password: boolean; avatar_key?: string | null; avatar_data_url?: string | null }
+export interface LeaderboardEntry { id: string; display_name: string; avatar_key?: string | null; avatar_data_url?: string | null; xp: number; rank: number }
 export interface Progress { lesson_id: string; completed_at: string; xp: number }
 export interface LessonStudyStatus { lesson_id: string; started_at: string; completed_runs: number; active_run: boolean; score: number | null; max_score: number | null }
 export interface Summary { lesson_status?: LessonStudyStatus[]; dedicated_exam_count?: number; exam_xp?: number; xp: number; progress: Progress[]; exam_count: number; legacy_count: number }

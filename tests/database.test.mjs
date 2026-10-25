@@ -25,7 +25,7 @@ test.before(async () => {
     CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULLIF(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     GRANT USAGE ON SCHEMA public,auth TO authenticated,anon,service_role;
     GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated,anon,service_role;`)
-  for (const name of ['001_schema.sql', '002_seed.sql', '003_learning_platform.sql', '004_structured_content.sql', '006_lesson_practice.sql', '007_study_status.sql']) {
+  for (const name of ['001_schema.sql', '002_seed.sql', '003_learning_platform.sql', '004_structured_content.sql', '006_lesson_practice.sql', '007_study_status.sql', '008_profile_avatar.sql', '009_leaderboard.sql']) {
     let sql = await fs.readFile(new URL('../supabase/' + name, import.meta.url), 'utf8')
     // PGlite uses PostgreSQL's built-in gen_random_uuid; pgcrypto is not installed here.
     sql = sql.replace('CREATE EXTENSION IF NOT EXISTS pgcrypto;', '')
@@ -35,6 +35,31 @@ test.before(async () => {
   await db.exec(`UPDATE public.profiles SET is_active=true; UPDATE public.profiles SET role='admin' WHERE id='${admin}';`)
 })
 test.after(async () => { await db?.close() })
+
+test('avatar keys are changed only by the Worker, isolated per user, and migration is repeatable', async () => {
+  const key = `avatars/${member}/${crypto.randomUUID()}.png`, next = `avatars/${member}/${crypto.randomUUID()}.jpg`
+  const swap = async (id, value) => {
+    await db.exec('SET ROLE service_role')
+    try { return (await db.query('SELECT public.replace_profile_avatar($1,$2) AS previous', [id, value])).rows[0].previous }
+    finally { await db.exec('RESET ROLE') }
+  }
+  await assert.rejects(rpc(member, 'replace_profile_avatar', [member, key]), /permission denied/)
+  await assert.rejects(rpc(admin, 'replace_profile_avatar', [member, key]), /permission denied/)
+  await assert.rejects(asUser(member, 'UPDATE public.profiles SET avatar_key=$1 WHERE id=$2', [key, member]), /permission denied/)
+  assert.equal(await swap(member, key), null)
+  assert.equal((await asUser(member, 'SELECT avatar_key FROM public.profiles WHERE id=$1', [member])).rows[0].avatar_key, key)
+  assert.equal((await asUser(other, 'SELECT avatar_key FROM public.profiles WHERE id=$1', [member])).rows.length, 0)
+  await assert.rejects(swap(other, key), /không hợp lệ/)
+  assert.equal(await swap(member, next), key)
+  await db.exec(await fs.readFile(new URL('../supabase/008_profile_avatar.sql', import.meta.url), 'utf8'))
+  assert.equal((await db.query('SELECT avatar_key FROM public.profiles WHERE id=$1', [member])).rows[0].avatar_key, next)
+  await db.query('UPDATE public.profiles SET must_change_password=true WHERE id=$1', [member])
+  await assert.rejects(swap(member, null), /không có quyền/)
+  await db.query('UPDATE public.profiles SET must_change_password=false,is_active=false WHERE id=$1', [member])
+  await assert.rejects(swap(member, null), /không có quyền/)
+  await db.query('UPDATE public.profiles SET is_active=true WHERE id=$1', [member])
+  assert.equal(await swap(member, null), next)
+})
 
 test('migration preserves lesson quizzes and closes direct answer/score access', async () => {
   assert.equal((await db.query('SELECT count(*)::integer AS n FROM public.exams')).rows[0].n, 12)
@@ -369,4 +394,38 @@ test('exam history filters exercises before pagination; old linked/unlinked resu
   assert.equal((await rpc(user,'learning_summary')).lesson_status.find(s=>s.lesson_id===id).completed_runs,21)
   assert.equal((await rpc(other,'lesson_exam_history',[id,0])).length,0)
   assert.equal((await rpc(user,'get_exam_run',[r.id])).score,1)
+})
+test('group leaderboard matches total XP, ranks ties, includes zero XP and shares only summary fields', async () => {
+  const first='00000000-0000-4000-8000-000000000100',tie='00000000-0000-4000-8000-000000000101',zero='00000000-0000-4000-8000-000000000102',locked='00000000-0000-4000-8000-000000000103',forced='00000000-0000-4000-8000-000000000104'
+  for(const id of [first,tie,zero,locked,forced]) await db.query('INSERT INTO auth.users(id,email) VALUES($1,$2)',[id,id+'@example.com'])
+  await db.query("UPDATE public.profiles SET is_active=true,display_name='Equal XP' WHERE id=ANY($1::uuid[])",[[first,tie,zero,forced]])
+  await db.query('UPDATE public.profiles SET must_change_password=true WHERE id=$1',[forced])
+  const key=`avatars/${first}/${crypto.randomUUID()}.png`
+  await db.query('UPDATE public.profiles SET avatar_key=$1 WHERE id=$2',[key,first])
+  const existingLesson=(await db.query('SELECT id FROM public.lessons LIMIT 1')).rows[0].id
+  await db.query('INSERT INTO public.user_progress(user_id,lesson_id,xp) VALUES($1,$2,20)',[first,existingLesson])
+  await db.query('INSERT INTO public.quiz_attempts(user_id,lesson_id,correct_count,total_count) VALUES($1,$2,8,3)',[first,existingLesson])
+  const examId=(await db.query('SELECT id FROM public.exams LIMIT 1')).rows[0].id
+  await db.query("INSERT INTO public.exam_runs(user_id,exam_id,snapshot,status,deadline,score,max_score) SELECT $1,$2,'{}','graded',now(),2,100 FROM generate_series(1,25)",[first,examId])
+  await db.query("INSERT INTO public.exam_runs(user_id,exam_id,snapshot,status,deadline,score,max_score) VALUES($1,$2,'{}','pending_review',now(),100,100),($3,$2,'{}','graded',now(),57,100)",[first,examId,tie])
+  const rows=await rpc(member,'xp_leaderboard'),a=rows.find(row=>row.id===first),b=rows.find(row=>row.id===tie)
+  assert.equal(a.xp,285);assert.equal(b.xp,285);assert.equal(a.rank,b.rank);assert.equal(a.avatar_key,key)
+  assert.ok(rows.findIndex(row=>row.id===first)<rows.findIndex(row=>row.id===tie))
+  assert.equal(rows.find(row=>row.id===zero).xp,0)
+  assert.ok(rows.some(row=>row.id===admin),'active administrators also participate')
+  assert.equal(rows.some(row=>[locked,forced].includes(row.id)),false)
+  for(let i=0;i<rows.length;i++) {
+    assert.deepEqual(Object.keys(rows[i]).sort(),['avatar_key','display_name','id','rank','xp'])
+    if(i)assert.ok(rows[i-1].xp>=rows[i].xp)
+    assert.equal(rows[i].rank,new Set(rows.filter(row=>row.xp>rows[i].xp).map(row=>row.xp)).size+1)
+    assert.equal(rows[i].xp,(await rpc(rows[i].id,'learning_summary')).xp)
+  }
+  await assert.rejects(rpc(locked,'xp_leaderboard'),/Không có quyền/)
+  await assert.rejects(rpc(forced,'xp_leaderboard'),/Không có quyền/)
+  await db.exec('SET ROLE anon')
+  try { await assert.rejects(db.query('SELECT public.xp_leaderboard()'),/permission denied/) } finally { await db.exec('RESET ROLE') }
+  await assert.rejects(asUser(member,'SELECT * FROM public.exam_runs WHERE user_id=$1',[first]),/permission denied/)
+  assert.equal((await asUser(member,'SELECT * FROM public.profiles WHERE id=$1',[first])).rows.length,0)
+  await db.exec(await fs.readFile(new URL('../supabase/009_leaderboard.sql',import.meta.url),'utf8'))
+  assert.deepEqual(await rpc(member,'xp_leaderboard'),rows)
 })

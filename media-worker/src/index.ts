@@ -2,7 +2,7 @@ interface Env {
   MEDIA_BUCKET: R2Bucket; ALLOWED_ORIGINS: string; SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string; SUPABASE_SERVICE_ROLE_KEY: string;
 }
-type Profile = { id: string; role: string; is_active: boolean; must_change_password: boolean }
+type Profile = { id: string; role: string; is_active: boolean; must_change_password: boolean; avatar_key?: string | null }
 class HttpError extends Error { constructor(message: string, public status = 400) { super(message) } }
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } })
 const base64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '')
@@ -69,7 +69,7 @@ async function readMedia(request: Request, env: Env, key: string): Promise<Respo
 const post = (value: unknown, method = 'POST'): RequestInit => ({ method, body: JSON.stringify(value) })
 const rpc = <T,>(env: Env, name: string, value: unknown) => backend<T>(env, `/rest/v1/rpc/${name}`, post(value))
 async function profile(env: Env, id: string) {
-  const rows = await backend<Profile[]>(env, `/rest/v1/profiles?id=eq.${encodeURIComponent(id)}&select=id,role,is_active,must_change_password`)
+  const rows = await backend<Profile[]>(env, `/rest/v1/profiles?id=eq.${encodeURIComponent(id)}&select=id,role,is_active,must_change_password,avatar_key`)
   if (!rows[0]?.is_active) throw new HttpError('Tài khoản chưa được duyệt hoặc đã bị khóa.', 403)
   return rows[0]
 }
@@ -129,6 +129,40 @@ async function route(request: Request, env: Env): Promise<Response> {
     return json({ ok: true })
   }
   if (me.must_change_password) throw new HttpError('Bạn cần đổi mật khẩu tạm trước khi tiếp tục.', 403)
+  const memberAvatar = /^\/members\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\/avatar$/.exec(url.pathname)
+  if (memberAvatar) {
+    if (request.method !== 'GET') throw new HttpError('Phương thức không được hỗ trợ.', 405)
+    const id = memberAvatar[1], target = id === user.id ? me : await profile(env, id)
+    if (target.must_change_password || !target.avatar_key || !target.avatar_key.startsWith(`avatars/${id}/`)) throw new HttpError('Không tìm thấy ảnh đại diện.', 404)
+    return readMedia(request, env, target.avatar_key)
+  }
+  if (url.pathname === '/account/avatar') {
+    if (request.method === 'GET') {
+      if (!me.avatar_key || !me.avatar_key.startsWith(`avatars/${user.id}/`)) throw new HttpError('Chưa có ảnh đại diện.', 404)
+      return readMedia(request, env, me.avatar_key)
+    }
+    if (!['POST', 'DELETE'].includes(request.method)) throw new HttpError('Phương thức không được hỗ trợ.', 405)
+    let key: string | null = null
+    if (request.method === 'POST') {
+      const type = request.headers.get('Content-Type') || ''
+      const ext = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' } as Record<string, string>)[type]
+      if (!ext) throw new HttpError('Hỗ trợ ảnh JPG, PNG và WebP.', 415)
+      const bytes = await bytesLimited(request, 2 * 1024 * 1024), h = bytes.slice(0, 12), text = new TextDecoder().decode(h)
+      const valid = ext === 'png' ? [137,80,78,71,13,10,26,10].every((n, i) => h[i] === n)
+        : ext === 'webp' ? text.startsWith('RIFF') && text.slice(8) === 'WEBP' : h[0] === 255 && h[1] === 216 && h[2] === 255
+      if (!valid) throw new HttpError('Nội dung không đúng định dạng ảnh.', 415)
+      key = `avatars/${user.id}/${crypto.randomUUID()}.${ext}`
+      await env.MEDIA_BUCKET.put(key, bytes, { httpMetadata: { contentType: type } })
+    }
+    let previous: string | null
+    try { previous = await rpc<string | null>(env, 'replace_profile_avatar', { p_user: user.id, p_key: key }) }
+    catch (e) { if (key) await env.MEDIA_BUCKET.delete(key); throw e }
+    if (previous && previous !== key && previous.startsWith(`avatars/${user.id}/`)) {
+      try { await env.MEDIA_BUCKET.delete(previous) }
+      catch { console.warn('Avatar updated; previous R2 object could not be removed.') }
+    }
+    return json({ avatar_key: key })
+  }
   if (url.pathname.startsWith('/admin/')) {
     if (me.role !== 'admin') throw new HttpError('Chỉ quản trị viên.', 403)
     if (request.method !== 'POST') throw new HttpError('Phương thức không được hỗ trợ.', 405)

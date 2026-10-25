@@ -1,4 +1,6 @@
 import type { PracticeDocument, PracticeRun, PracticeSummary } from './types'
+import type { LeaderboardEntry } from './types'
+import { avatarDataURL, validateAvatar } from './avatar'
 import { cloudMode, mediaWorkerUrl, supabase } from './supabase'
 import * as demo from './demo'
 import { errorMessage } from './content'
@@ -26,6 +28,7 @@ export async function loadProfile(id: string): Promise<Profile> {
 }
 export async function renameProfile(name: string) { if (!cloudMode) return demo.demoRename(name); return rpc('update_my_profile', { p_name: name }) }
 export async function summary(): Promise<Summary> { return cloudMode ? rpc('learning_summary') : demo.demoSummary() }
+export async function loadLeaderboard(): Promise<LeaderboardEntry[]> { return cloudMode ? rpc('xp_leaderboard') : demo.demoLeaderboard() }
 export async function completeLesson(id: string) { return cloudMode ? rpc('complete_lesson', { p_id: id }) : demo.demoComplete(id) }
 export async function saveLesson(doc: Lesson, words: Word[]): Promise<string> { return cloudMode ? rpc('save_lesson', { p_doc: doc, p_words: words }) : demo.demoLesson(doc, words) }
 export async function saveExam(doc: ExamDocument): Promise<string> { return cloudMode ? rpc('save_exam', { p_doc: doc }) : demo.demoExam(doc) }
@@ -37,15 +40,26 @@ export async function saveResponses(id: string, responses: Record<string, string
 export async function submitExam(id: string, responses: Record<string, string>, revision: number): Promise<ExamRun> { return cloudMode ? rpc('submit_exam', { p_id: id, p_responses: responses, p_revision: revision }) : demo.demoSubmit(id, responses, revision) }
 export async function gradeExam(id: string, grades: ExamRun['grades']): Promise<ExamRun> { return cloudMode ? rpc('grade_exam', { p_id: id, p_grades: grades }) : demo.demoGrade(id, grades) }
 export async function history(offset = 0, pending = false): Promise<ExamRun[]> { return cloudMode ? rpc('list_exam_runs', { p_offset: offset, p_pending: pending }) : demo.demoHistory(offset, pending) }
-export async function worker<T>(path: string, init: RequestInit = {}): Promise<T> {
+async function workerResponse(path: string, init: RequestInit = {}): Promise<Response> {
   if (!cloudMode || !mediaWorkerUrl) throw Error('Cần cấu hình Supabase và VITE_MEDIA_WORKER_URL để dùng chức năng này.')
   const { data, error } = await supabase!.auth.getSession(); if (error) throw error
   if (!data.session) throw Error('Vui lòng đăng nhập lại.')
   const headers = new Headers(init.headers); headers.set('Authorization', `Bearer ${data.session.access_token}`)
   const response = await fetch(`${mediaWorkerUrl}${path}`, { ...init, headers })
-  const body = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
-  if (!response.ok) throw Error(body.error || errorMessage(body)); return body
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
+    throw Error(body.error || errorMessage(body))
+  }
+  return response
 }
+export async function worker<T>(path: string, init: RequestInit = {}): Promise<T> { return (await workerResponse(path, init)).json() }
+export const avatarBlob = async (memberId?: string) => (await workerResponse(memberId ? `/members/${encodeURIComponent(memberId)}/avatar` : '/account/avatar')).blob()
+export async function uploadAvatar(file: File) {
+  await validateAvatar(file)
+  if (!cloudMode) return demo.demoAvatar(await avatarDataURL(file))
+  return worker('/account/avatar', { method: 'POST', headers: { 'Content-Type': file.type }, body: file })
+}
+export const removeAvatar = () => cloudMode ? worker('/account/avatar', { method: 'DELETE' }) : Promise.resolve(demo.demoAvatar(null))
 export const workerJSON = <T,>(path: string, value: unknown, method = 'POST') => worker<T>(path, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value) })
 export const mediaURL = (key: string) => worker<{ url: string }>('/media-ticket?key=' + encodeURIComponent(key))
 export const listMedia = (): Promise<MediaFile[]> => cloudMode ? all('media_files', 'key') : Promise.resolve([])

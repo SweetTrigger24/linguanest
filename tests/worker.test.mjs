@@ -7,7 +7,7 @@ const {outputText}=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleK
 const {default:worker}=await import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
 const originalFetch=globalThis.fetch
 const admin='00000000-0000-4000-8000-000000000001',member='00000000-0000-4000-8000-000000000002'
-let calls,role,active,mustChange,allowed,files,deleted,failMetadata,failDelete,failPut,r2Calls
+let calls,role,active,mustChange,allowed,files,deleted,failMetadata,failDelete,failPut,r2Calls,avatarKey,profileOverrides
 const env={SUPABASE_URL:'https://test.supabase.co',SUPABASE_ANON_KEY:'sb_publishable_test',SUPABASE_SERVICE_ROLE_KEY:'sb_secret_test',ALLOWED_ORIGINS:'https://learn.example.com',MEDIA_BUCKET:{
   async head(key) { r2Calls.push(['head',key]); return objectInfo(key) },
   async get(key,options) {
@@ -28,7 +28,7 @@ function objectInfo(key) {
   return {size:file.bytes.length,httpEtag:'"test-etag"',uploaded:new Date('2026-10-01T00:00:00Z'),writeHttpMetadata(headers){headers.set('Content-Type',file.type)}}
 }
 test.beforeEach(()=>{
-  calls=[];role='admin';active=true;mustChange=false;allowed=true;files=new Map();deleted=[];failMetadata=false;failDelete=false;failPut=false;r2Calls=[]
+  calls=[];role='admin';active=true;mustChange=false;allowed=true;files=new Map();deleted=[];failMetadata=false;failDelete=false;failPut=false;r2Calls=[];avatarKey=null;profileOverrides=new Map()
   globalThis.fetch=async (url,init={})=>{
     const u=new URL(url),body=typeof init.body==='string'?JSON.parse(init.body):null,headers=new Headers(init.headers)
     calls.push([u.pathname,init.method||'GET',body,headers])
@@ -38,7 +38,16 @@ test.beforeEach(()=>{
       assert.equal(headers.get('apikey'),'sb_publishable_test'); assert.equal(headers.has('Authorization'),false)
       return body.password==='correct password'?Response.json({user:{id:role==='admin'?admin:member}}):Response.json({msg:'Wrong password'},{status:400})
     }
-    if(u.pathname==='/rest/v1/profiles'&&(!init.method||init.method==='GET'))return Response.json([{id:u.searchParams.get('id').slice(3),role:u.searchParams.get('id').includes(member)?'member':role,is_active:active,must_change_password:mustChange}])
+    if(u.pathname==='/rest/v1/profiles'&&(!init.method||init.method==='GET')) {
+      const id=u.searchParams.get('id').slice(3)
+      if(profileOverrides.has(id))return Response.json(profileOverrides.get(id)?[profileOverrides.get(id)]:[])
+      return Response.json([{id,role:id===member?'member':role,is_active:active,must_change_password:mustChange,avatar_key:avatarKey}])
+    }
+    if(u.pathname==='/rest/v1/rpc/replace_profile_avatar') {
+      assert.equal(body.p_user,role==='admin'?admin:member)
+      if(failMetadata)return Response.json({message:'Metadata failed'},{status:500})
+      const previous=avatarKey;avatarKey=body.p_key;return Response.json(previous)
+    }
     if(u.pathname==='/rest/v1/rpc/can_access_media_for')return Response.json(allowed)
     if(u.pathname==='/rest/v1/rpc/reserve_media_delete')return allowed?Response.json(null):Response.json({message:'File đang được lịch sử sử dụng'},{status:400})
     if(u.pathname==='/rest/v1/media_files'&&failMetadata)return Response.json({message:'Metadata failed'},{status:500})
@@ -49,6 +58,44 @@ test.beforeEach(()=>{
 test.afterEach(()=>{assert.equal(calls.some(c=>c[0].startsWith('/storage/')),false)})
 test.after(()=>{globalThis.fetch=originalFetch})
 const request=(path,method='GET',body,extra={})=>new Request('https://media.example.com'+path,{method,headers:{Authorization:'Bearer user-token',Origin:'https://learn.example.com',...(body?{'Content-Type':'application/json'}:{}),...extra},...(body?{body:typeof body==='string'||body instanceof Uint8Array?body:JSON.stringify(body)}:{})})
+
+test('members upload, replace, read and remove only their own avatar without media admin rights',async()=>{
+  role='member'
+  const png=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0])
+  const upload=()=>worker.fetch(request('/account/avatar?user='+admin,'POST',png,{'Content-Type':'image/png'}),env)
+  assert.equal((await worker.fetch(request('/account/avatar'),env)).status,404)
+  assert.equal((await upload()).status,200)
+  const first=avatarKey;assert.match(first,new RegExp(`^avatars/${member}/`));assert.equal(files.size,1)
+  let response=await worker.fetch(request('/account/avatar?key=avatars/'+admin+'/other.png'),env)
+  assert.equal(response.status,200);assert.equal(response.headers.get('Content-Type'),'image/png')
+  assert.equal(response.headers.get('Cache-Control'),'private, no-store')
+  assert.deepEqual(new Uint8Array(await response.arrayBuffer()),png)
+  assert.equal((await upload()).status,200);assert.notEqual(avatarKey,first);assert.equal(files.has(first),false)
+  assert.equal((await worker.fetch(request('/media/'+avatarKey),env)).status,400)
+  assert.equal((await worker.fetch(request('/account/avatar','DELETE'),env)).status,200)
+  assert.equal(avatarKey,null);assert.equal(files.size,0)
+  assert.equal(calls.some(c=>c[0]==='/rest/v1/media_files'),false)
+})
+
+test('avatar validation and account gates precede storage; failed writes preserve the existing avatar',async()=>{
+  role='member'
+  const png=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0])
+  const upload=(bytes=png,headers={})=>worker.fetch(request('/account/avatar','POST',bytes,{'Content-Type':'image/png',...headers}),env)
+  assert.equal((await upload(png,{'Content-Type':'image/svg+xml'})).status,415)
+  assert.equal((await upload(new Uint8Array([0,1,2]))).status,415)
+  assert.equal((await upload(png,{'Content-Length':String(2*1024*1024+1)})).status,413)
+  assert.equal((await upload(new Uint8Array(2*1024*1024+1))).status,413)
+  mustChange=true;assert.equal((await upload()).status,403)
+  mustChange=false;active=false;assert.equal((await upload()).status,403)
+  active=true;assert.equal(r2Calls.length,0)
+  assert.equal((await upload()).status,200);const previous=avatarKey
+  failMetadata=true;assert.equal((await upload()).status,503)
+  assert.equal(avatarKey,previous);assert.equal(files.size,1);assert.ok(files.has(previous))
+  failMetadata=false;failPut=true;assert.equal((await upload()).status,503)
+  assert.equal(avatarKey,previous)
+  failPut=false;failDelete=true;assert.equal((await upload()).status,200)
+  assert.notEqual(avatarKey,previous)
+})
 test('reject anonymous, wrong origins, locked accounts and member uploads',async()=>{
   assert.equal((await worker.fetch(new Request('https://media.example.com/media-ticket?key=files/x.mp3'),env)).status,401)
   assert.equal((await worker.fetch(request('/media','POST',{}, {Origin:'https://evil.example.com'}),env)).status,403)
@@ -145,4 +192,28 @@ test('media authorization runs before any R2 access; uploads respect file limits
   assert.equal((await worker.fetch(request('/media?filename=x.mp3','POST',new Uint8Array([73,68,51]),{'Content-Length':String(31*1024*1024)}),env)).status,413)
   assert.equal((await worker.fetch(request('/media?filename=x.exe','POST',new Uint8Array([1])),env)).status,415)
   assert.equal(r2Calls.length,0)
+})
+test('leaderboard avatars allow authenticated group reads and never allow editing another account',async()=>{
+  role='member'
+  const key=`avatars/${admin}/${crypto.randomUUID()}.png`,png=new Uint8Array([137,80,78,71,13,10,26,10])
+  const target={id:admin,role:'admin',is_active:true,must_change_password:false,avatar_key:key}
+  profileOverrides.set(admin,target);files.set(key,{bytes:png,type:'image/png'})
+  const path=`/members/${admin}/avatar`
+  const response=await worker.fetch(request(path+'?key=files/other.png'),env)
+  assert.equal(response.status,200);assert.deepEqual(new Uint8Array(await response.arrayBuffer()),png)
+  assert.equal(response.headers.get('Cache-Control'),'private, no-store')
+  r2Calls=[]
+  assert.equal((await worker.fetch(request(path,'DELETE'),env)).status,405)
+  assert.equal((await worker.fetch(request(path,'POST',png,{'Content-Type':'image/png'}),env)).status,405)
+  assert.equal((await worker.fetch(new Request('https://media.example.com'+path),env)).status,401)
+  assert.equal((await worker.fetch(request(path,'GET',undefined,{Origin:'https://evil.example.com'}),env)).status,403)
+  mustChange=true;assert.equal((await worker.fetch(request(path),env)).status,403)
+  mustChange=false;active=false;assert.equal((await worker.fetch(request(path),env)).status,403)
+  active=true;target.must_change_password=true;assert.equal((await worker.fetch(request(path),env)).status,404)
+  target.must_change_password=false;target.is_active=false;assert.equal((await worker.fetch(request(path),env)).status,403)
+  target.is_active=true;target.avatar_key=null;assert.equal((await worker.fetch(request(path),env)).status,404)
+  target.avatar_key=`avatars/${member}/${crypto.randomUUID()}.png`;assert.equal((await worker.fetch(request(path),env)).status,404)
+  profileOverrides.set(admin,null);assert.equal((await worker.fetch(request(path),env)).status,403)
+  assert.equal(r2Calls.length,0)
+  assert.equal(calls.some(call=>call[0]==='/rest/v1/rpc/replace_profile_avatar'),false)
 })
